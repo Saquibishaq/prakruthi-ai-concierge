@@ -549,44 +549,48 @@
         margin: 10px 0;
       }
       .info-card {
-        background: #fafafa;
-        border: 1px solid #e4e4e7;
-        border-radius: 9px;
-        padding: 10px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 11px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        transition: border-color 0.15s;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+        transition: border-color 0.15s, box-shadow 0.15s;
       }
-      .info-card:hover { border-color: #a1a1aa; }
+      .info-card:hover { border-color: #94a3b8; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07); }
       .card-badge {
         display: inline-block;
-        font-size: 9px;
-        font-weight: 600;
+        font-size: 9.5px;
+        font-weight: 700;
         text-transform: uppercase;
-        padding: 2px 6px;
+        padding: 2.5px 7px;
         border-radius: 4px;
-        background: #e4e4e7;
-        color: #27272a;
+        background: #f1f5f9;
+        color: #0f172a;
         width: fit-content;
-        margin-bottom: 4px;
+        margin-bottom: 5px;
+        letter-spacing: 0.03em;
       }
-      .card-title { font-size: 12px; font-weight: 600; color: #09090b; line-height: 1.25; }
-      .card-duration { font-size: 10.5px; color: #71717a; margin-top: 2px; }
-      .card-price { font-size: 12px; font-weight: 700; color: #09090b; margin: 4px 0; }
-      .card-highlights { list-style: none; margin: 5px 0 8px 0; padding: 0; }
+      .card-title { font-size: 13px; font-weight: 700; color: #0f172a; line-height: 1.3; }
+      .card-duration { font-size: 11px; color: #64748b; margin-top: 2px; }
+      .card-price { font-size: 12.5px; font-weight: 700; color: #0f172a; margin: 4px 0; }
+      .card-highlights { list-style: none; margin: 6px 0 8px 0; padding: 0; }
       .card-highlights li {
-        font-size: 10.5px;
-        color: #52525b;
+        font-size: 11px;
+        color: #334155;
         position: relative;
-        padding-left: 12px;
-        margin-bottom: 2px;
+        padding-left: 14px;
+        margin-bottom: 3px;
+        line-height: 1.35;
       }
       .card-highlights li::before {
         content: "•";
         position: absolute;
         left: 2px;
-        color: #71717a;
+        color: #0284c7;
+        font-weight: bold;
       }
       .card-actions { display: flex; gap: 4px; margin-top: 6px; }
 
@@ -665,27 +669,28 @@
       .step-row {
         display: flex;
         align-items: flex-start;
-        gap: 8px;
-        background: #fafafa;
-        border: 1px solid #e4e4e7;
-        border-radius: 7px;
-        padding: 7px 9px;
+        gap: 9px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 8px 11px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
       }
       .step-badge {
-        width: 18px;
-        height: 18px;
+        width: 19px;
+        height: 19px;
         border-radius: 50%;
-        background: #18181b;
+        background: #0f172a;
         color: #ffffff;
         font-size: 10px;
-        font-weight: 600;
+        font-weight: 700;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
       }
-      .step-text { font-size: 11px; color: #27272a; }
-      .step-text strong { display: block; color: #09090b; font-size: 11.5px; margin-bottom: 1px; }
+      .step-text { font-size: 11.5px; color: #334155; line-height: 1.4; }
+      .step-text strong { display: block; color: #0f172a; font-size: 12px; font-weight: 700; margin-bottom: 2px; }
 
       /* 6. Expandable Accordions */
       .accordion-group { margin: 8px 0; display: flex; flex-direction: column; gap: 5px; }
@@ -999,41 +1004,68 @@
       .calc-price { font-size: 17px; font-weight: 700; color: #09090b; }
 
       /* ========================================================= */
-      /* DARK THEME STYLES                                         */
+      /* 100% COMPLETE DARK THEME OVERHAUL                         */
       /* ========================================================= */
       #chat-window.dark-theme {
-        background: #0f0f12;
-        box-shadow: 0 20px 40px -15px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.1);
+        background: #09090b !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        box-shadow: 0 24px 48px -12px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.1) !important;
+      }
+      #chat-window.dark-theme .header {
+        background: #09090b !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+      }
+      #chat-window.dark-theme .header-name {
+        color: #ffffff !important;
+      }
+      #chat-window.dark-theme .header-sub {
+        color: #a1a1aa !important;
+      }
+      #chat-window.dark-theme .header-menu {
+        background: #141418 !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
+        box-shadow: 0 16px 36px rgba(0,0,0,0.6) !important;
+      }
+      #chat-window.dark-theme .menu-item {
+        color: #e4e4e7 !important;
+        border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+      }
+      #chat-window.dark-theme .menu-item:hover {
+        background: #27272a !important;
+        color: #ffffff !important;
       }
       #chat-window.dark-theme .mode-bar {
-        background: #141418;
-        border-bottom: 1px solid rgba(255,255,255,0.08);
+        background: #121215 !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
       }
-      #chat-window.dark-theme .mode-label { color: #a1a1aa; }
+      #chat-window.dark-theme .mode-label { color: #a1a1aa !important; }
       #chat-window.dark-theme .mode-switcher {
-        background: #1e1e24;
-        border-color: rgba(255,255,255,0.1);
+        background: #1c1c22 !important;
+        border-color: rgba(255, 255, 255, 0.12) !important;
       }
-      #chat-window.dark-theme .mode-btn { color: #a1a1aa; }
+      #chat-window.dark-theme .mode-btn {
+        color: #a1a1aa !important;
+      }
       #chat-window.dark-theme .mode-btn.active {
-        background: #2e2e38;
-        color: #ffffff;
+        background: #2e2e38 !important;
+        color: #ffffff !important;
       }
       #chat-window.dark-theme .quick-actions-bar {
-        background: #141418;
-        border-bottom: 1px solid rgba(255,255,255,0.08);
+        background: #121215 !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
       }
       #chat-window.dark-theme .action-pill-btn {
-        background: #1e1e24;
-        border-color: rgba(255,255,255,0.1);
-        color: #e4e4e7;
+        background: #1c1c22 !important;
+        border-color: rgba(255, 255, 255, 0.14) !important;
+        color: #e4e4e7 !important;
       }
       #chat-window.dark-theme .action-pill-btn:hover {
-        background: #272730;
-        color: #ffffff;
+        background: #272730 !important;
+        color: #ffffff !important;
+        border-color: rgba(0, 242, 254, 0.4) !important;
       }
       #chat-window.dark-theme .messages-container {
-        background: #09090b;
+        background: #09090b !important;
         scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
       }
       #chat-window.dark-theme .messages-container::-webkit-scrollbar-thumb {
@@ -1042,103 +1074,285 @@
       #chat-window.dark-theme .messages-container::-webkit-scrollbar-thumb:hover {
         background: rgba(255, 255, 255, 0.35);
       }
+      #chat-window.dark-theme .user-bubble {
+        background: #27272a !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.16) !important;
+      }
       #chat-window.dark-theme .bot-bubble {
-        background: #16161a;
-        border: 1px solid rgba(255,255,255,0.08);
-        color: #e4e4e7;
+        background: #141418 !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #e4e4e7 !important;
       }
-      #chat-window.dark-theme .bot-bubble strong { color: #ffffff; }
+      #chat-window.dark-theme .bot-bubble strong {
+        color: #ffffff !important;
+      }
       #chat-window.dark-theme .bot-bubble p, 
-      #chat-window.dark-theme .bot-bubble li { color: #d4d4d8; }
+      #chat-window.dark-theme .bot-bubble li {
+        color: #d4d4d8 !important;
+      }
       #chat-window.dark-theme .bot-bubble blockquote {
-        background: #1c1c22;
-        border-left-color: #60a5fa;
-        color: #e4e4e7;
+        background: #1c1c22 !important;
+        border-left-color: #00f2fe !important;
+        color: #e4e4e7 !important;
       }
-      #chat-window.dark-theme .bot-msg-sender { color: #a1a1aa; }
-      #chat-window.dark-theme .quick-replies {
-        background: #141418;
-        border-top: 1px solid rgba(255,255,255,0.08);
-      }
-      #chat-window.dark-theme .quick-chip {
-        background: #1e1e24;
-        border-color: rgba(255,255,255,0.1);
-        color: #e4e4e7;
-      }
-      #chat-window.dark-theme .quick-chip:hover {
-        background: #272730;
-        color: #ffffff;
-      }
-      #chat-window.dark-theme .composer {
-        background: #141418;
-        border-top: 1px solid rgba(255,255,255,0.08);
-      }
-      #chat-window.dark-theme .chat-input {
-        background: #1a1a20;
-        border-color: rgba(255,255,255,0.12);
-        color: #ffffff;
-      }
-      #chat-window.dark-theme .chat-input:focus {
-        border-color: #a1a1aa;
-        background: #202028;
-      }
-      #chat-window.dark-theme #mic-btn {
-        background: #1e1e24 !important;
-        border-color: rgba(255,255,255,0.1) !important;
+      #chat-window.dark-theme .bot-msg-sender {
         color: #a1a1aa !important;
       }
-      #chat-window.dark-theme .powered-by {
-        background: #141418;
-        border-top: 1px solid rgba(255,255,255,0.05);
-        color: #71717a;
+      #chat-window.dark-theme .msg-summary {
+        background: #1a1a22 !important;
+        border: 1px solid rgba(0, 242, 254, 0.2) !important;
+        color: #e4e4e7 !important;
       }
-      #chat-window.dark-theme .powered-by a { color: #a1a1aa; }
-      #chat-window.dark-theme .comp-table {
-        background: #16161a;
-        border-color: rgba(255,255,255,0.1);
+      #chat-window.dark-theme .msg-summary strong {
+        color: #00f2fe !important;
+      }
+
+      /* STRUCTURED CARDS IN DARK MODE (NO MORE BRIGHT WHITE BACKGROUND!) */
+      #chat-window.dark-theme .info-card {
+        background: #1a1a20 !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
+      }
+      #chat-window.dark-theme .info-card:hover {
+        border-color: rgba(0, 242, 254, 0.45) !important;
+      }
+      #chat-window.dark-theme .card-badge {
+        background: rgba(0, 242, 254, 0.14) !important;
+        color: #00f2fe !important;
+        border: 1px solid rgba(0, 242, 254, 0.35) !important;
+      }
+      #chat-window.dark-theme .card-title {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+      }
+      #chat-window.dark-theme .card-duration {
+        color: #a1a1aa !important;
+      }
+      #chat-window.dark-theme .card-price {
+        color: #38bdf8 !important;
+      }
+      #chat-window.dark-theme .card-highlights li {
+        color: #d4d4d8 !important;
+      }
+      #chat-window.dark-theme .card-highlights li::before {
+        color: #00f2fe !important;
+      }
+      #chat-window.dark-theme .card-actions .action-btn,
+      #chat-window.dark-theme .action-btn {
+        background: #09090b !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.22) !important;
+      }
+      #chat-window.dark-theme .card-actions .action-btn:hover,
+      #chat-window.dark-theme .action-btn:hover {
+        background: #27272a !important;
+        border-color: #00f2fe !important;
+      }
+
+      /* STEPS IN DARK MODE (NO MORE WHITE-ON-WHITE TEXT!) */
+      #chat-window.dark-theme .step-row {
+        background: #1a1a20 !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35) !important;
+      }
+      #chat-window.dark-theme .step-badge {
+        background: #00f2fe !important;
+        color: #09090b !important;
+        font-weight: 800 !important;
+      }
+      #chat-window.dark-theme .step-text strong {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+      }
+      #chat-window.dark-theme .step-text span {
+        color: #d4d4d8 !important;
+      }
+
+      /* COMPARISON TABLE IN DARK MODE */
+      #chat-window.dark-theme .comp-table-wrap {
+        background: #141418 !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
       }
       #chat-window.dark-theme .comp-table th {
-        background: #22222a;
-        color: #f4f4f5;
-        border-bottom-color: rgba(255,255,255,0.1);
+        background: #22222a !important;
+        color: #ffffff !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
       }
       #chat-window.dark-theme .comp-table td {
-        background: #16161a;
-        color: #d4d4d8;
-        border-bottom-color: rgba(255,255,255,0.06);
+        background: #141418 !important;
+        color: #d4d4d8 !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
       }
-      #chat-window.dark-theme .card-item {
-        background: #1a1a20;
-        border-color: rgba(255,255,255,0.1);
-        color: #f4f4f5;
+      #chat-window.dark-theme .comp-table tr:nth-child(even) td {
+        background: #1a1a22 !important;
       }
-      #chat-window.dark-theme .card-item-title { color: #ffffff; }
-      #chat-window.dark-theme .card-item-sub { color: #a1a1aa; }
+      #chat-window.dark-theme .comp-highlights-footer {
+        background: #1c1c24 !important;
+        color: #cbd5e1 !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+      }
+
+      /* ITINERARY TIMELINE IN DARK MODE */
+      #chat-window.dark-theme .itinerary-timeline {
+        border-left-color: rgba(255, 255, 255, 0.18) !important;
+      }
+      #chat-window.dark-theme .itinerary-day .day-marker {
+        background: #00f2fe !important;
+        border-color: #09090b !important;
+      }
+      #chat-window.dark-theme .itinerary-day .day-heading {
+        color: #ffffff !important;
+      }
+      #chat-window.dark-theme .itinerary-day .day-block {
+        color: #d4d4d8 !important;
+      }
+      #chat-window.dark-theme .itinerary-day .day-block strong {
+        color: #ffffff !important;
+      }
+      #chat-window.dark-theme .itinerary-day .day-tag {
+        background: #27272a !important;
+        color: #00f2fe !important;
+      }
+
+      /* ACCORDIONS IN DARK MODE */
+      #chat-window.dark-theme .ans-accordion {
+        background: #1a1a20 !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
+      }
+      #chat-window.dark-theme .ans-accordion summary {
+        background: #1a1a20 !important;
+        color: #ffffff !important;
+      }
+      #chat-window.dark-theme .ans-accordion-body {
+        background: #141418 !important;
+        color: #d4d4d8 !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+      }
+
+      /* CHECKLISTS & BUDGET IN DARK MODE */
+      #chat-window.dark-theme .checklist-card,
+      #chat-window.dark-theme .budget-card {
+        background: #1a1a20 !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
+      }
+      #chat-window.dark-theme .checklist-title,
+      #chat-window.dark-theme .budget-card h5 {
+        color: #ffffff !important;
+      }
+      #chat-window.dark-theme .check-item,
+      #chat-window.dark-theme .budget-row {
+        color: #d4d4d8 !important;
+        border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+      }
+      #chat-window.dark-theme .budget-total-row {
+        color: #ffffff !important;
+        border-top-color: rgba(255, 255, 255, 0.16) !important;
+      }
+
+      /* CONFIRM ENQUIRY IN DARK MODE */
+      #chat-window.dark-theme .confirm-enquiry-card {
+        background: #052e16 !important;
+        border: 1px solid #166534 !important;
+        color: #86efac !important;
+      }
+      #chat-window.dark-theme .confirm-enquiry-card h5 {
+        color: #bbf7d0 !important;
+      }
+      #chat-window.dark-theme .confirm-details {
+        background: rgba(0, 0, 0, 0.45) !important;
+        color: #86efac !important;
+      }
+
+      /* FOLLOW UP CHIPS IN DARK MODE */
       #chat-window.dark-theme .follow-up-box {
-        background: #1c182a;
-        border-color: rgba(168,85,247,0.3);
+        background: #181524 !important;
+        border: 1px solid rgba(168, 85, 247, 0.35) !important;
       }
       #chat-window.dark-theme .follow-up-chip {
-        background: #27213d;
-        border-color: rgba(168,85,247,0.4);
-        color: #e9d5ff;
+        background: #251f38 !important;
+        border: 1px solid rgba(168, 85, 247, 0.45) !important;
+        color: #e9d5ff !important;
+      }
+      #chat-window.dark-theme .follow-up-chip:hover {
+        background: #332950 !important;
+        color: #ffffff !important;
+      }
+
+      /* COMPOSER & FOOTER IN DARK MODE */
+      #chat-window.dark-theme .quick-replies {
+        background: #121215 !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+      }
+      #chat-window.dark-theme .quick-chip {
+        background: #1c1c22 !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
+        color: #e4e4e7 !important;
+      }
+      #chat-window.dark-theme .quick-chip:hover {
+        background: #272730 !important;
+        border-color: #00f2fe !important;
+        color: #ffffff !important;
+      }
+      #chat-window.dark-theme .composer {
+        background: #121215 !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+      }
+      #chat-window.dark-theme .chat-input {
+        background: #1a1a20 !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
+        color: #ffffff !important;
+      }
+      #chat-window.dark-theme .chat-input:focus {
+        border-color: #00f2fe !important;
+        background: #202028 !important;
+      }
+      #chat-window.dark-theme #mic-btn {
+        background: #1c1c22 !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        color: #a1a1aa !important;
+      }
+      #chat-window.dark-theme .send-btn {
+        background: #00f2fe !important;
+        color: #09090b !important;
+        font-weight: 700 !important;
+      }
+      #chat-window.dark-theme .send-btn:hover {
+        background: #38bdf8 !important;
+      }
+      #chat-window.dark-theme .powered-by {
+        background: #121215 !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+        color: #71717a !important;
+      }
+      #chat-window.dark-theme .powered-by a {
+        color: #a1a1aa !important;
+      }
+      #chat-window.dark-theme .msg-actions {
+        border-top-color: rgba(255, 255, 255, 0.08) !important;
+      }
+      #chat-window.dark-theme .action-link {
+        color: #a1a1aa !important;
+      }
+      #chat-window.dark-theme .action-link:hover {
+        color: #00f2fe !important;
       }
       #chat-window.dark-theme .calc-modal {
-        background: #16161a;
-        color: #f4f4f5;
-        border: 1px solid rgba(255,255,255,0.1);
+        background: #141418 !important;
+        color: #f4f4f5 !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
       }
-      #chat-window.dark-theme .calc-modal h4 { color: #ffffff; }
+      #chat-window.dark-theme .calc-modal h4 { color: #ffffff !important; }
       #chat-window.dark-theme .calc-input {
-        background: #1e1e24;
-        border-color: rgba(255,255,255,0.15);
-        color: #ffffff;
+        background: #1a1a20 !important;
+        border-color: rgba(255, 255, 255, 0.15) !important;
+        color: #ffffff !important;
       }
       #chat-window.dark-theme .calc-res-box {
-        background: #1e1e24;
-        border-color: rgba(255,255,255,0.1);
+        background: #1a1a20 !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
       }
-      #chat-window.dark-theme .calc-price { color: #ffffff; }
+      #chat-window.dark-theme .calc-price { color: #00f2fe !important; }
 
       /* ========================================================= */
       /* CUTE ROBOT TEASER POPUP                                   */
