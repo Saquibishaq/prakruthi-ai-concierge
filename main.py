@@ -465,6 +465,157 @@ async def fire_webhook_background(webhook_url: str, payload: dict):
 QUERY_RESPONSE_CACHE: Dict[str, Dict[str, Any]] = {}
 QUERY_CACHE_TTL = 900  # 15 minutes
 
+def build_direct_kb_payload(
+    reply_text: str,
+    format_style: str,
+    detail_mode: str,
+    quick_replies: List[str],
+    suggested_actions: List[Dict[str, Any]],
+    tenant_id: str,
+    lead_score: str = "WARM",
+    summary: Optional[str] = None
+) -> Dict[str, Any]:
+    return {
+        "reply": reply_text,
+        "reply_message": reply_text,
+        "summary": summary or reply_text[:120],
+        "format_style": format_style,
+        "detail_mode": detail_mode,
+        "components": {
+            "summary": summary or reply_text[:120],
+            "cards": [],
+            "comparison_table": None,
+            "itinerary": [],
+            "steps": [],
+            "accordions": [],
+            "checklists": [],
+            "budget_breakdown": None,
+            "source_references": [],
+            "follow_up": {"question": "How can we assist you further?", "options": quick_replies[:3]},
+            "suggested_actions": suggested_actions
+        },
+        "quick_replies": quick_replies,
+        "suggested_actions": suggested_actions,
+        "lead_state": {"lead_score": lead_score},
+        "crm_synced_now": False,
+        "total_leads_captured": count_tenant_leads(tenant_id=tenant_id),
+        "cached": True,
+        "resolved_from": "knowledge_base_direct"
+    }
+
+def try_resolve_from_knowledge_base(
+    tenant: Dict[str, Any],
+    query: str,
+    packages: List[Dict[str, Any]],
+    active_detail: str,
+    history: List[Dict[str, str]]
+) -> Optional[Dict[str, Any]]:
+    """
+    Evaluates whether the user's inquiry can be answered directly and factually 
+    from the tenant's stored profile, knowledge base, services, or contact details.
+    Returns the complete structured payload in < 10ms if confident.
+    Returns None if the query is novel, complex, or requires Gemini LLM reasoning.
+    """
+    q = (query or "").strip().lower()
+    if not q:
+        return None
+
+    # Never bypass Gemini if the user asks a complex, comparative, or speculative question
+    complex_triggers = [
+        "how would you", "compare", "difference between", "why should i",
+        "write code", "can you build", "integrate with", "suggest for my",
+        "recommend for", "how much would it cost for", "custom plan for",
+        "vs", "which one is better", "how to implement", "explain in depth"
+    ]
+    if any(k in q for k in complex_triggers):
+        return None
+
+    tenant_name = tenant.get("name", "our team")
+    phone = (tenant.get("contact_phone") or "").strip()
+    email = (tenant.get("contact_email") or "").strip()
+    address = (tenant.get("contact_address") or "").strip()
+    kb = (tenant.get("knowledge_base") or tenant.get("tagline") or "").strip()
+    tagline = (tenant.get("tagline") or "").strip()
+    languages = (tenant.get("supported_languages") or "English, Hindi").strip()
+
+    clean_digits = re.sub(r"[^0-9]", "", phone)
+    if clean_digits and len(clean_digits) == 10:
+        clean_digits = "91" + clean_digits
+
+    wa_action = {
+        "action_id": "act_wa_direct",
+        "label": "Chat on WhatsApp",
+        "action_type": "open_url",
+        "payload": {"url": f"https://wa.me/{clean_digits}?text=Hi%20{tenant_name}%2C%20I%20am%20inquiring%20from%20your%20website."}
+    } if clean_digits else None
+
+    # 1. GREETINGS (Sub-5ms)
+    if q in ["hi", "hello", "hey", "hola", "namaste", "namaskar", "start", "good morning", "good afternoon", "good evening"] and not history:
+        welcome_txt = tenant.get("welcome_message") or f"Welcome to **{tenant_name}**! How may I assist you today?"
+        starters = ["Explore Services", "Book Consultation", "Contact Support"]
+        return build_direct_kb_payload(welcome_txt, "greeting", active_detail, starters, [wa_action] if wa_action else [], tenant["id"], "COLD")
+
+    # 2. CONTACT / PHONE / WHATSAPP / ADDRESS / OFFICE / LOCATION (Sub-5ms)
+    if any(k in q for k in ["phone", "whatsapp", "call", "contact", "email", "address", "office", "location", "where are you", "reach you", "talk to a human", "speak with someone", "customer support"]):
+        txt = f"You can reach **{tenant_name}** directly through our official channels:"
+        if phone:
+            txt += f"\n- **Phone / WhatsApp**: {phone}"
+        if email:
+            txt += f"\n- **Email**: {email}"
+        if address:
+            txt += f"\n- **Location**: {address}"
+        if not phone and not email and not address:
+            txt += "\nPlease share your project details and contact number, and our team will get in touch with you right away."
+        actions = []
+        if phone:
+            actions.append({"action_id": "act_call", "label": f"Call {phone}", "action_type": "open_url", "payload": {"url": f"tel:{phone}"}})
+        if wa_action:
+            actions.append(wa_action)
+        return build_direct_kb_payload(txt, "contact_card", active_detail, ["Explore Services", "Book Consultation"], actions, tenant["id"], "WARM")
+
+    # 3. APPOINTMENT / CONSULTATION / MEETING / HIRE (Sub-5ms)
+    if any(k in q for k in ["book appointment", "schedule", "consultation", "meeting", "hire you", "book a call", "talk to sales"]):
+        txt = f"We would love to discuss your project! You can schedule a consultation with the **{tenant_name}** team directly via WhatsApp or phone."
+        if phone:
+            txt += f"\n\nDirect Line: **{phone}**"
+        booking_action = {
+            "action_id": "act_book_wa",
+            "label": "Schedule via WhatsApp",
+            "action_type": "open_url",
+            "payload": {"url": f"https://wa.me/{clean_digits}?text=Hi%20{tenant_name}%21%20I%20would%20like%20to%20schedule%20a%20consultation%20for%20my%20business."}
+        } if clean_digits else None
+        actions = [booking_action] if booking_action else ([wa_action] if wa_action else [])
+        return build_direct_kb_payload(txt, "direct_answer", active_detail, ["Explore Services", "Frequently Asked Questions"], actions, tenant["id"], "HOT")
+
+    # 4. OVERVIEW / ABOUT US / COMPANY MISSION (Sub-5ms)
+    if any(k in q for k in ["overview", "about us", "about devlancer", "about company", "who are you", "tell me about", "what is devlancer", "what is nexo", "company background"]):
+        txt = f"Welcome to **{tenant_name}**!\n\n"
+        if tagline:
+            txt += f"*{tagline}*\n\n"
+        if kb:
+            txt += f"{kb}\n\n"
+        if phone:
+            txt += f"Ready to collaborate? Reach us on WhatsApp at **{phone}**."
+        return build_direct_kb_payload(txt, "direct_answer", active_detail, ["Explore Services", "Book Consultation", "Contact Support"], [wa_action] if wa_action else [], tenant["id"], "WARM")
+
+    # 5. SERVICES / OFFERINGS / CAPABILITIES / WHAT WE BUILD (Sub-5ms)
+    if any(k in q for k in ["services", "what do you do", "what do you build", "what can you do", "what do you offer", "capabilities", "solutions", "offerings", "what software"]):
+        txt = f"At **{tenant_name}**, our core offerings include:\n\n"
+        if kb:
+            txt += f"{kb}\n\n"
+        elif tagline:
+            txt += f"{tagline}\n\n"
+        txt += "Have a specific project or software requirement in mind? Ask us about custom architectures or click below to talk to our engineering team!"
+        return build_direct_kb_payload(txt, "direct_answer", active_detail, ["Book Consultation", "Contact Support", "Frequently Asked Questions"], [wa_action] if wa_action else [], tenant["id"], "WARM")
+
+    # 6. SUPPORTED LANGUAGES (Sub-5ms)
+    if any(k in q for k in ["languages", "language support", "do you speak", "supported languages"]):
+        txt = f"**{tenant_name}** provides support in: **{languages}**.\n\nHow can we help you today?"
+        return build_direct_kb_payload(txt, "direct_answer", active_detail, ["Explore Services", "Contact Support"], [wa_action] if wa_action else [], tenant["id"], "WARM")
+
+    # Query requires nuance, dynamic generation, or deeper consultation -> Route to Gemini
+    return None
+
 @app.post("/api/chat")
 async def chat_endpoint(req: ChatRequest, request: Request):
     client = get_genai_client()
@@ -531,159 +682,22 @@ async def chat_endpoint(req: ChatRequest, request: Request):
     msg_clean = (req.message or "").strip().lower()
 
     # -------------------------------------------------------------
-    # SPEED OPTIMIZATION 1: Zero-Latency Greeting Fast-Path
+    # HYBRID ROUTER: Direct Website & Knowledge-Base Fast-Path (< 10ms)
     # -------------------------------------------------------------
-    if msg_clean in ["hi", "hello", "hey", "hola", "namaste", "namaskar", "start", "good morning", "good afternoon", "good evening"] and not history:
-        welcome_txt = tenant.get("welcome_message") or f"Welcome to {tenant.get('name', 'our team')}! How may I assist you today?"
-        starters = []
-        try:
-            starters = json.loads(tenant.get("starter_prompts") or "[]")
-        except Exception:
-            starters = []
-        if not starters:
-            starters = ["Explore Services", "Pricing Details", "Contact Team"]
-
-        return {
-            "reply": welcome_txt,
-            "reply_message": welcome_txt,
-            "summary": None,
-            "format_style": "greeting",
-            "detail_mode": active_detail,
-            "components": {
-                "summary": None,
-                "cards": [],
-                "comparison_table": None,
-                "itinerary": [],
-                "steps": [],
-                "accordions": [],
-                "checklists": [],
-                "budget_breakdown": None,
-                "source_references": [],
-                "follow_up": {"question": "How can we assist you today?", "options": starters},
-                "suggested_actions": []
-            },
-            "quick_replies": starters,
-            "suggested_actions": [],
-            "lead_state": {"lead_score": "COLD"},
-            "crm_synced_now": False,
-            "total_leads_captured": count_tenant_leads(tenant_id=tenant_id),
-            "cached": True
-        }
+    # Factual/common inquiries answered instantly without invoking Gemini.
+    # If the inquiry is custom, speculative, comparative, or novel -> returns None (routes to Gemini).
+    direct_kb_response = try_resolve_from_knowledge_base(
+        tenant=tenant,
+        query=req.message,
+        packages=packages,
+        active_detail=active_detail,
+        history=history
+    )
+    if direct_kb_response:
+        return direct_kb_response
 
     # -------------------------------------------------------------
-    # SPEED OPTIMIZATION 2: Zero-Latency Contact / Phone Fast-Path
-    # -------------------------------------------------------------
-    if any(k in msg_clean for k in ["contact number", "phone number", "call you", "whatsapp number", "email address", "reach you", "your office", "where are you located"]):
-        phone = tenant.get("contact_phone") or ""
-        email = tenant.get("contact_email") or ""
-        agency_name = tenant.get("name", "our team")
-        contact_txt = f"You can reach **{agency_name}** directly via:"
-        if phone:
-            contact_txt += f"\n- **Phone / WhatsApp**: {phone}"
-        if email:
-            contact_txt += f"\n- **Email**: {email}"
-        if not phone and not email:
-            contact_txt += "\nPlease share your project details and our team will get back to you shortly."
-
-        actions = []
-        if phone:
-            clean_digits = re.sub(r"[^0-9]", "", phone)
-            actions.append({
-                "action_id": "act_call",
-                "label": f"Call {phone}",
-                "action_type": "open_url",
-                "payload": {"url": f"tel:{phone}"}
-            })
-            actions.append({
-                "action_id": "act_wa",
-                "label": "WhatsApp Chat",
-                "action_type": "open_url",
-                "payload": {"url": f"https://wa.me/{clean_digits}"}
-            })
-
-        return {
-            "reply": contact_txt,
-            "reply_message": contact_txt,
-            "summary": None,
-            "format_style": "contact_card",
-            "detail_mode": active_detail,
-            "components": {
-                "summary": None,
-                "cards": [],
-                "comparison_table": None,
-                "itinerary": [],
-                "steps": [],
-                "accordions": [],
-                "checklists": [],
-                "budget_breakdown": None,
-                "source_references": [],
-                "follow_up": {"question": "Would you like our team to get in touch with you?", "options": ["Request Callback", "Explore Services"]},
-                "suggested_actions": actions
-            },
-            "quick_replies": ["Request Callback", "Explore Services"],
-            "suggested_actions": actions,
-            "lead_state": {"lead_score": "WARM"},
-            "crm_synced_now": False,
-            "total_leads_captured": count_tenant_leads(tenant_id=tenant_id),
-            "cached": True
-        }
-
-    # -------------------------------------------------------------
-    # SPEED OPTIMIZATION 3: Zero-Latency Overview & Knowledge Base Fast-Path
-    # -------------------------------------------------------------
-    is_overview = msg_clean in ["overview", "about", "about us", "who are you", "what is this", "services", "what services do you offer", "what do you do", "frequently asked questions", "faq"]
-    if is_overview and (tenant.get("knowledge_base") or tenant.get("tagline")):
-        kb = tenant.get("knowledge_base") or tenant.get("tagline") or ""
-        agency_name = tenant.get("name", "our team")
-        phone = tenant.get("contact_phone") or ""
-        
-        reply_txt = f"Welcome to **{agency_name}**!\n\n{kb}\n\n"
-        if phone:
-            reply_txt += f"Ready to discuss your project? You can reach us directly on WhatsApp or call **{phone}**."
-        else:
-            reply_txt += "Feel free to ask any questions or share your project requirements right here!"
-            
-        actions = []
-        if phone:
-            clean_digits = re.sub(r"[^0-9]", "", phone)
-            if len(clean_digits) == 10:
-                clean_digits = "91" + clean_digits
-            actions.append({
-                "action_id": "act_wa_overview",
-                "label": "Chat on WhatsApp",
-                "action_type": "open_url",
-                "payload": {"url": f"https://wa.me/{clean_digits}?text=Hi%20{agency_name}%2C%20I%20would%20like%20to%20know%20more%20about%20your%20services."}
-            })
-            
-        return {
-            "reply": reply_txt,
-            "reply_message": reply_txt,
-            "summary": f"Overview of {agency_name} services and capabilities.",
-            "format_style": "direct_answer",
-            "detail_mode": active_detail,
-            "components": {
-                "summary": f"Overview of {agency_name} services and capabilities.",
-                "cards": [],
-                "comparison_table": None,
-                "itinerary": [],
-                "steps": [],
-                "accordions": [],
-                "checklists": [],
-                "budget_breakdown": None,
-                "source_references": [],
-                "follow_up": {"question": "Would you like to book a consultation or discuss a custom solution?", "options": ["Contact Support", "Frequently Asked Questions"]},
-                "suggested_actions": actions
-            },
-            "quick_replies": ["Contact Support", "Frequently Asked Questions", "Book Consultation"],
-            "suggested_actions": actions,
-            "lead_state": {"lead_score": "WARM"},
-            "crm_synced_now": False,
-            "total_leads_captured": count_tenant_leads(tenant_id=tenant_id),
-            "cached": True
-        }
-
-    # -------------------------------------------------------------
-    # SPEED OPTIMIZATION 4: In-Memory Sub-10ms Response Cache
+    # SPEED OPTIMIZATION: In-Memory Sub-10ms Response Cache
     # -------------------------------------------------------------
     cache_key = f"{tenant_id}:{active_detail}:{msg_clean}"
     cached_entry = QUERY_RESPONSE_CACHE.get(cache_key)
