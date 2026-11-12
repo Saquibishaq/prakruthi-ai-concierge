@@ -16,6 +16,7 @@ __pycache__/
 
 # Databases & local state
 *.db
+!devlancer_platform.db
 *.sqlite3
 *.db-journal
 *.db-wal
@@ -30,3 +31,4 @@ Thumbs.db
 
 # Logs
 *.log
+.vercel

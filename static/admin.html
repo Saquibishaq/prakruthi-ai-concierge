@@ -1133,7 +1133,7 @@
     // CLIENT SETTINGS & GUI CONTROLS MODAL LOGIC
     // ===============================================================
     function openTenantSettingsModal(tenantId) {
-      const t = tenants.find(x => x.id === tenantId);
+      const t = tenants.find(x => x.id === tenantId || x.slug === tenantId || x.assistant_id === tenantId);
       if (!t) return;
 
       document.getElementById("setting-tenant-id").value = t.id;
@@ -1203,8 +1203,12 @@
         if (r.checked) storeChats = parseInt(r.value);
       }
 
+      const t = tenants.find(x => x.id === tenantId || x.slug === tenantId || x.assistant_id === tenantId);
+
       const updates = {
         name: document.getElementById("setting-name").value.trim(),
+        slug: (t && t.slug) ? t.slug : undefined,
+        category: (t && t.category) ? t.category : undefined,
         assistant_name: document.getElementById("setting-asst-name").value.trim(),
         website_url: document.getElementById("setting-website").value.trim(),
         logo_url: document.getElementById("setting-logo").value.trim(),

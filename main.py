@@ -845,11 +845,51 @@ async def api_get_tenant(slug_or_id: str):
 
 @app.put("/api/tenants/{tenant_id}")
 async def api_update_tenant(tenant_id: str, updates: Dict[str, Any]):
-    tenant = get_tenant_by_id(tenant_id)
+    tenant = get_tenant_by_id(tenant_id) or get_tenant_by_slug(tenant_id) or get_tenant_by_assistant_id(tenant_id)
+    if not tenant:
+        # Graceful Serverless Fallback: If tenant doesn't exist in this ephemeral instance, auto-upsert
+        target_slug = (updates.get("slug") or tenant_id.replace("tenant_", "")).lower().replace(" ", "-")
+        target_name = updates.get("name") or target_slug.replace("-", " ").title()
+        target_asst = updates.get("assistant_id") or f"asst_{target_slug.replace('-', '_')}"
+        category = updates.get("category") or classify_business_category(
+            target_name, updates.get("website_url", ""), updates.get("knowledge_base", ""), updates.get("welcome_message", "")
+        )
+        new_tenant = {
+            "id": tenant_id if tenant_id.startswith("tenant_") else f"tenant_{target_slug}",
+            "slug": target_slug,
+            "assistant_id": target_asst,
+            "name": target_name,
+            "category": category,
+            "tagline": updates.get("tagline", f"Official AI Concierge for {target_name}"),
+            "website_url": updates.get("website_url", ""),
+            "logo_url": updates.get("logo_url", ""),
+            "primary_color": updates.get("primary_color", "#ffffff"),
+            "secondary_color": updates.get("secondary_color", "#2b2b2b"),
+            "accent_color": updates.get("accent_color", "#ff9900"),
+            "assistant_name": updates.get("assistant_name", f"{target_name} Assistant"),
+            "welcome_message": updates.get("welcome_message", f"Welcome to {target_name}! How may I help you?"),
+            "personality_prompt": updates.get("personality_prompt", f"You are the official AI concierge for {target_name}."),
+            "knowledge_base": updates.get("knowledge_base", ""),
+            "supported_languages": updates.get("supported_languages", "English, Hindi"),
+            "contact_phone": updates.get("contact_phone", ""),
+            "contact_email": updates.get("contact_email", ""),
+            "contact_address": updates.get("contact_address", ""),
+            "webhook_url": updates.get("webhook_url", ""),
+            "tone_of_voice": updates.get("tone_of_voice", "Professional and helpful"),
+            "default_detail_level": updates.get("default_detail_level", "standard"),
+            "store_chat_history": int(updates.get("store_chat_history", 0)),
+            "allowed_domains": "*",
+            "is_active": 1
+        }
+        upsert_tenant(new_tenant)
+        tenant = get_tenant_by_id(new_tenant["id"]) or get_tenant_by_slug(target_slug)
+
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
-    success = update_tenant_settings(tenant_id, updates)
-    return {"status": "success" if success else "no_changes", "tenant_id": tenant_id}
+        
+    target_id = tenant["id"]
+    success = update_tenant_settings(target_id, updates)
+    return {"status": "success" if success else "no_changes", "tenant_id": target_id}
 
 @app.delete("/api/tenants/{tenant_id}")
 async def api_delete_tenant(tenant_id: str):
