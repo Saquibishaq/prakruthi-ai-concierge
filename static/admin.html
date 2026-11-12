@@ -974,7 +974,7 @@
       if (!t) return;
 
       const host = window.location.origin;
-      const snippet = `<script src="${host}/widget.js" data-assistant-id="${t.assistant_id}" defer><\\/script>`;
+      const snippet = `<script src="${host}/widget.js" data-assistant-id="${t.assistant_id}" defer>` + `</` + `script>`;
 
       document.getElementById("snippet-agency-title").textContent = `${t.name} • Setup`;
       document.getElementById("snippet-code-box").value = snippet;
@@ -1040,12 +1040,14 @@
           verifyDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
           verifyText.textContent = "Verified Active!";
           verifyText.className = "font-medium text-emerald-400";
-          diagBox.innerHTML = `<span class="text-emerald-400 font-medium">✓ Found:</span> ${data.message}`;
+          diagBox.innerHTML = `<span class="text-emerald-400 font-medium">✓ Found:</span> ${escapeHtml(data.message)}`;
         } else {
           verifyDot.className = "w-1.5 h-1.5 rounded-full bg-zinc-600";
           verifyText.textContent = "Snippet Not Detected";
           verifyText.className = "font-medium text-zinc-400";
-          diagBox.innerHTML = `<span class="text-zinc-300 font-medium">Result:</span> ${data.message}<br/><span class="text-zinc-500 mt-1 block">${data.diagnostics ? (data.diagnostics.troubleshooting || '') : ''}</span>`;
+          const rawMsg = escapeHtml(data.message || "");
+          const rawTrouble = escapeHtml(data.diagnostics ? (data.diagnostics.troubleshooting || '') : '');
+          diagBox.innerHTML = `<span class="text-zinc-300 font-medium">Result:</span> ${rawMsg}<br/><span class="text-zinc-400 font-mono text-[10px] mt-1.5 block bg-black/40 p-2 rounded border border-zinc-800">${rawTrouble}</span>`;
         }
         await loadData();
       } catch (err) {
