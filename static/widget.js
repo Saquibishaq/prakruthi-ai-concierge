@@ -1975,7 +1975,10 @@
         sendBtn.disabled = false;
 
         if (!res.ok) {
-          appendBotMessageText(`Notice: ${data.detail || 'Service currently unavailable'}`);
+          const contactMsg = tenantConfig.contact_phone 
+            ? `We are experiencing temporary high traffic. You can reach our team directly at **${escapeHtml(tenantConfig.contact_phone)}** or message us on WhatsApp!`
+            : `We are experiencing temporary high traffic. Please leave your message or contact info and our team will assist you right away!`;
+          appendBotMessageText(contactMsg);
           return;
         }
 
@@ -1998,7 +2001,10 @@
         const typingEl = shadow.getElementById('typing-el');
         if (typingEl) typingEl.remove();
         sendBtn.disabled = false;
-        appendBotMessageText("Connection error. Please check your network and try again.");
+        const errMsg = tenantConfig.contact_phone 
+          ? `We are experiencing temporary high traffic. Please feel free to reach us directly on WhatsApp or call **${escapeHtml(tenantConfig.contact_phone)}**.`
+          : `We are experiencing temporary high traffic. Please try again in a few moments.`;
+        appendBotMessageText(errMsg);
       }
     }
 

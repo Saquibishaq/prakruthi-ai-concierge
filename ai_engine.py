@@ -573,8 +573,8 @@ async def run_concierge_inference(
         )
     )
 
-    # Put ultra-fast gemini-3.5-flash-lite first for lightning-fast token generation
-    models_to_try = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.8-flash"]
+    # High-availability model order: prioritized for free-tier speed and resilience
+    models_to_try = ["gemini-3.5-flash-lite", "gemini-3.8-flash"]
     last_err = None
 
     # Adaptive output token limits: drastically speeds up simple and standard replies
@@ -593,7 +593,7 @@ async def run_concierge_inference(
     )
 
     for m in models_to_try:
-        for attempt in range(2):
+        for attempt in range(3):
             try:
                 response = await client.aio.models.generate_content(
                     model=m,
@@ -627,15 +627,15 @@ async def run_concierge_inference(
                 last_err = e
                 err_str = str(e)
                 if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str or "NOT_FOUND" in err_str:
-                    # Don't waste time retrying an exhausted model
+                    # Do not retry exhausted or decommissioned model
                     break
-                # If 503 or transient spike, short wait then retry
+                # If 503 or transient capacity spike on Google Cloud, back off and retry
                 if "503" in err_str or "UNAVAILABLE" in err_str:
-                    await asyncio.sleep(0.3)
+                    await asyncio.sleep(0.6 * (attempt + 1))
                 continue
 
     # Graceful degradation fallback: Clean any JSON from text and populate basic response
-    print(f"[WARN AI Engine] Inference error ({last_err}), attempting fallback...")
+    print(f"[WARN AI Engine] Primary models temporarily busy ({last_err}), attempting direct text generation...")
     try:
         text_config = types.GenerateContentConfig(
             system_instruction=system_instruction,
@@ -663,7 +663,13 @@ async def run_concierge_inference(
             reply_message=cleaned_text or "I am here to assist you. How can I help you today?",
             format_style="direct_answer",
             summary="",
-            suggested_quick_replies=["Overview", "Top Recommendations", "Contact Support"]
+            suggested_quick_replies=["Overview", "Contact Support", "Frequently Asked Questions"]
         )
     except Exception as final_e:
-        raise RuntimeError(f"All AI generation attempts failed: {final_e}")
+        print(f"[WARN AI Engine] All external LLM attempts exhausted ({final_e}). Activating zero-downtime offline fallback...")
+        return ConciergeLLMResponse(
+            reply_message="We are ready to assist you! Our digital desk is experiencing high demand right now, but our team is actively online. Feel free to connect with us directly or submit your inquiry below.",
+            format_style="direct_answer",
+            summary="Connecting you directly with the team.",
+            suggested_quick_replies=["Overview", "Contact Support", "WhatsApp Chat"]
+        )
