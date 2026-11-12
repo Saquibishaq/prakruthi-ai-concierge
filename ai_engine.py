@@ -519,8 +519,9 @@ async def run_concierge_inference(
 
     contents = []
     
-    # Chronological history (last 4 turns for lightning-fast bounded context)
-    for turn in conversation_history[-4:]:
+    # Chronological history (last 3 turns for lightning-fast bounded context)
+    recent_history = conversation_history[-3:] if len(conversation_history) > 3 else conversation_history
+    for turn in recent_history:
         contents.append(
             types.Content(
                 role=turn["role"],
@@ -544,15 +545,21 @@ async def run_concierge_inference(
         )
     )
 
-    models_to_try = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.8-flash"]
+    # Put ultra-fast gemini-3.5-flash-lite first for lightning-fast token generation
+    models_to_try = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.8-flash"]
     last_err = None
 
-    # Comprehensive token limit for complete, articulate answers without cutoff
-    max_tokens = 2500
+    # Adaptive output token limits: drastically speeds up simple and standard replies
+    if active_detail == "quick":
+        max_tokens = 450
+    elif active_detail == "detailed":
+        max_tokens = 2200
+    else:
+        max_tokens = 1100
 
     config = types.GenerateContentConfig(
         system_instruction=system_instruction,
-        temperature=0.2,
+        temperature=0.15,
         response_mime_type="application/json",
         max_output_tokens=max_tokens
     )
@@ -590,9 +597,13 @@ async def run_concierge_inference(
                             )
             except Exception as e:
                 last_err = e
+                err_str = str(e)
+                if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str or "NOT_FOUND" in err_str:
+                    # Don't waste time retrying an exhausted model
+                    break
                 # If 503 or transient spike, short wait then retry
-                if "503" in str(e) or "UNAVAILABLE" in str(e):
-                    await asyncio.sleep(0.4)
+                if "503" in err_str or "UNAVAILABLE" in err_str:
+                    await asyncio.sleep(0.3)
                 continue
 
     # Graceful degradation fallback: Clean any JSON from text and populate basic response
@@ -600,10 +611,11 @@ async def run_concierge_inference(
     try:
         text_config = types.GenerateContentConfig(
             system_instruction=system_instruction,
-            temperature=0.3
+            temperature=0.2,
+            max_output_tokens=max_tokens
         )
         fb_resp = await client.aio.models.generate_content(
-            model="gemini-3.5-flash",
+            model="gemini-3.5-flash-lite",
             contents=contents,
             config=text_config
         )
@@ -613,6 +625,8 @@ async def run_concierge_inference(
             try:
                 if cleaned_text:
                     fb_json["reply_message"] = cleaned_text
+                elif fb_json.get("summary"):
+                    fb_json["reply_message"] = fb_json["summary"]
                 return ConciergeLLMResponse(**fb_json)
             except Exception:
                 pass

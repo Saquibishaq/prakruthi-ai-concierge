@@ -5,6 +5,7 @@ lead extraction, and real-time CRM syncing.
 """
 
 import os
+import re
 import time
 import json
 import asyncio
@@ -460,6 +461,10 @@ async def fire_webhook_background(webhook_url: str, payload: dict):
     except Exception as e:
         print(f"[WARN Webhook Sync] {e}")
 
+# High-speed in-memory response cache for sub-10ms response times
+QUERY_RESPONSE_CACHE: Dict[str, Dict[str, Any]] = {}
+QUERY_CACHE_TTL = 900  # 15 minutes
+
 @app.post("/api/chat")
 async def chat_endpoint(req: ChatRequest, request: Request):
     client = get_genai_client()
@@ -515,6 +520,124 @@ async def chat_endpoint(req: ChatRequest, request: Request):
     active_detail = req.detail_mode or session_context.get("detail_mode") or tenant.get("default_detail_level") or "standard"
     active_detail = detect_natural_instruction_mode(req.message, active_detail)
 
+    # Conversation history: prioritize client payload, fallback to DB if store_chat_history is enabled
+    if req.history:
+        history = req.history[-3:]
+    elif store_chat_history:
+        history = get_conversation_history(tenant_id, req.session_id, limit=3)
+    else:
+        history = []
+
+    msg_clean = (req.message or "").strip().lower()
+
+    # -------------------------------------------------------------
+    # SPEED OPTIMIZATION 1: Zero-Latency Greeting Fast-Path
+    # -------------------------------------------------------------
+    if msg_clean in ["hi", "hello", "hey", "hola", "namaste", "namaskar", "start", "good morning", "good afternoon", "good evening"] and not history:
+        welcome_txt = tenant.get("welcome_message") or f"Welcome to {tenant.get('name', 'our team')}! How may I assist you today?"
+        starters = []
+        try:
+            starters = json.loads(tenant.get("starter_prompts") or "[]")
+        except Exception:
+            starters = []
+        if not starters:
+            starters = ["Explore Services", "Pricing Details", "Contact Team"]
+
+        return {
+            "reply": welcome_txt,
+            "reply_message": welcome_txt,
+            "summary": None,
+            "format_style": "greeting",
+            "detail_mode": active_detail,
+            "components": {
+                "summary": None,
+                "cards": [],
+                "comparison_table": None,
+                "itinerary": [],
+                "steps": [],
+                "accordions": [],
+                "checklists": [],
+                "budget_breakdown": None,
+                "source_references": [],
+                "follow_up": {"question": "How can we assist you today?", "options": starters},
+                "suggested_actions": []
+            },
+            "quick_replies": starters,
+            "suggested_actions": [],
+            "lead_state": {"lead_score": "COLD"},
+            "crm_synced_now": False,
+            "total_leads_captured": count_tenant_leads(tenant_id=tenant_id),
+            "cached": True
+        }
+
+    # -------------------------------------------------------------
+    # SPEED OPTIMIZATION 2: Zero-Latency Contact / Phone Fast-Path
+    # -------------------------------------------------------------
+    if any(k in msg_clean for k in ["contact number", "phone number", "call you", "whatsapp number", "email address", "reach you", "your office", "where are you located"]):
+        phone = tenant.get("contact_phone") or ""
+        email = tenant.get("contact_email") or ""
+        agency_name = tenant.get("name", "our team")
+        contact_txt = f"You can reach **{agency_name}** directly via:"
+        if phone:
+            contact_txt += f"\n- **Phone / WhatsApp**: {phone}"
+        if email:
+            contact_txt += f"\n- **Email**: {email}"
+        if not phone and not email:
+            contact_txt += "\nPlease share your project details and our team will get back to you shortly."
+
+        actions = []
+        if phone:
+            clean_digits = re.sub(r"[^0-9]", "", phone)
+            actions.append({
+                "action_id": "act_call",
+                "label": f"Call {phone}",
+                "action_type": "open_url",
+                "payload": {"url": f"tel:{phone}"}
+            })
+            actions.append({
+                "action_id": "act_wa",
+                "label": "WhatsApp Chat",
+                "action_type": "open_url",
+                "payload": {"url": f"https://wa.me/{clean_digits}"}
+            })
+
+        return {
+            "reply": contact_txt,
+            "reply_message": contact_txt,
+            "summary": None,
+            "format_style": "contact_card",
+            "detail_mode": active_detail,
+            "components": {
+                "summary": None,
+                "cards": [],
+                "comparison_table": None,
+                "itinerary": [],
+                "steps": [],
+                "accordions": [],
+                "checklists": [],
+                "budget_breakdown": None,
+                "source_references": [],
+                "follow_up": {"question": "Would you like our team to get in touch with you?", "options": ["Request Callback", "Explore Services"]},
+                "suggested_actions": actions
+            },
+            "quick_replies": ["Request Callback", "Explore Services"],
+            "suggested_actions": actions,
+            "lead_state": {"lead_score": "WARM"},
+            "crm_synced_now": False,
+            "total_leads_captured": count_tenant_leads(tenant_id=tenant_id),
+            "cached": True
+        }
+
+    # -------------------------------------------------------------
+    # SPEED OPTIMIZATION 3: In-Memory Sub-10ms Response Cache
+    # -------------------------------------------------------------
+    cache_key = f"{tenant_id}:{active_detail}:{msg_clean}"
+    cached_entry = QUERY_RESPONSE_CACHE.get(cache_key)
+    if cached_entry and (time.time() - cached_entry["time"] < QUERY_CACHE_TTL):
+        res = dict(cached_entry["payload"])
+        res["cached"] = True
+        return res
+
     # Build dynamically grounded system instruction
     system_instruction = build_system_instruction(
         tenant=tenant,
@@ -522,14 +645,6 @@ async def chat_endpoint(req: ChatRequest, request: Request):
         session_context=session_context,
         detail_mode=active_detail
     )
-
-    # Conversation history: prioritize client payload, fallback to DB if store_chat_history is enabled
-    if req.history:
-        history = req.history[-4:]
-    elif store_chat_history:
-        history = get_conversation_history(tenant_id, req.session_id, limit=4)
-    else:
-        history = []
 
     try:
         # Run AI inference with structured component schema
@@ -677,7 +792,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
 
         total_leads_count = count_tenant_leads(tenant_id=tenant_id)
 
-        return {
+        chat_response_payload = {
             "reply": parsed.reply_message,
             "reply_message": parsed.reply_message,
             "summary": parsed.summary,
@@ -690,6 +805,15 @@ async def chat_endpoint(req: ChatRequest, request: Request):
             "crm_synced_now": crm_synced_now,
             "total_leads_captured": total_leads_count
         }
+
+        # Cache general inquiries for sub-10ms response on repeat
+        if not is_buying_intent and not phone:
+            QUERY_RESPONSE_CACHE[cache_key] = {
+                "payload": chat_response_payload,
+                "time": time.time()
+            }
+
+        return chat_response_payload
 
     except Exception as e:
         print(f"[ERROR /api/chat] {e}")
