@@ -133,6 +133,10 @@
   function initWidget() {
     const container = document.createElement('div');
     container.id = 'devlancer-ai-widget-root';
+    container.setAttribute('data-lenis-prevent', 'true');
+    container.setAttribute('data-lenis-prevent-wheel', 'true');
+    container.setAttribute('data-lenis-prevent-touch', 'true');
+    container.setAttribute('data-scroll-prevent', 'true');
     document.body.appendChild(container);
 
     const shadow = container.attachShadow({ mode: 'open' });
@@ -218,6 +222,9 @@
         display: none;
         flex-direction: column;
         overflow: hidden;
+        overscroll-behavior: contain;
+        overscroll-behavior-y: contain;
+        touch-action: pan-y;
         transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       }
 
@@ -444,12 +451,33 @@
       .messages-container {
         flex: 1;
         overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        touch-action: pan-y;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
         padding: 14px;
         display: flex;
         flex-direction: column;
         gap: 12px;
         background: #fcfcfd;
         position: relative;
+      }
+      .messages-container::-webkit-scrollbar {
+        width: 6px;
+      }
+      .messages-container::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .messages-container::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.18);
+        border-radius: 999px;
+      }
+      .messages-container::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.35);
       }
       .message-wrapper { display: flex; flex-direction: column; max-width: 90%; }
       .bot-wrapper { align-self: flex-start; }
@@ -485,7 +513,7 @@
       .typing-dot {
         width: 6px;
         height: 6px;
-        background-color: ${primaryColor || '#047857'};
+        background-color: ${tenantConfig?.primary_color || '#047857'};
         border-radius: 50%;
         opacity: 0.7;
         animation: typingBounce 1.2s infinite ease-in-out both;
@@ -1006,6 +1034,13 @@
       }
       #chat-window.dark-theme .messages-container {
         background: #09090b;
+        scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+      }
+      #chat-window.dark-theme .messages-container::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      #chat-window.dark-theme .messages-container::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.35);
       }
       #chat-window.dark-theme .bot-bubble {
         background: #16161a;
@@ -1144,6 +1179,10 @@
     // Chat Window
     const win = document.createElement('div');
     win.id = 'chat-window';
+    win.setAttribute('data-lenis-prevent', 'true');
+    win.setAttribute('data-lenis-prevent-wheel', 'true');
+    win.setAttribute('data-lenis-prevent-touch', 'true');
+    win.setAttribute('data-scroll-prevent', 'true');
     win.innerHTML = `
       <div class="header">
         <div class="header-title-box">
@@ -1291,6 +1330,9 @@
     const sendBtn = shadow.getElementById('send-btn');
     const inputField = shadow.getElementById('input-field');
     const msgFeed = shadow.getElementById('msg-feed');
+    msgFeed.setAttribute('data-lenis-prevent', 'true');
+    msgFeed.setAttribute('data-lenis-prevent-wheel', 'true');
+    msgFeed.setAttribute('data-lenis-prevent-touch', 'true');
     const quickFeed = shadow.getElementById('quick-feed');
     const micBtn = shadow.getElementById('mic-btn');
     const scrollDownBtn = shadow.getElementById('scroll-down-btn');
@@ -1467,6 +1509,41 @@
     scrollDownBtn.onclick = () => {
       msgFeed.scrollTop = msgFeed.scrollHeight;
     };
+
+    // Bulletproof scroll isolation: Prevent parent website (Lenis, Locomotive, window) from hijacking scroll
+    win.addEventListener('wheel', (e) => {
+      // Find the scrollable container under cursor
+      let target = e.composedPath ? e.composedPath()[0] : e.target;
+      let scrollable = null;
+      while (target && target !== win && target !== shadow) {
+        if (target.scrollHeight > target.clientHeight) {
+          const oy = window.getComputedStyle(target).overflowY;
+          if (oy === 'auto' || oy === 'scroll') {
+            scrollable = target;
+            break;
+          }
+        }
+        target = target.parentElement;
+      }
+      if (!scrollable) scrollable = msgFeed;
+
+      // Always stop event bubbling so Lenis/window smooth scroll never captures this wheel event
+      e.stopPropagation();
+
+      const delta = e.deltaY;
+      const up = delta < 0;
+      const isAtTop = scrollable.scrollTop <= 0;
+      const isAtBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
+
+      // If at scroll boundary, prevent default so parent window does NOT scroll
+      if ((up && isAtTop) || (!up && isAtBottom)) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    win.addEventListener('touchmove', (e) => {
+      e.stopPropagation();
+    }, { passive: true });
 
     // Quick Replies Binding
     quickFeed.addEventListener('click', (e) => {
