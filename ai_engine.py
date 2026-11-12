@@ -418,9 +418,17 @@ The user has established these parameters in this session. Maintain continuity w
     is_travel = (category == "travel")
     role_desc = "the official digital travel consultant and senior advisor" if is_travel else f"the official digital AI concierge and domain expert for {tenant['name']}"
 
-    offerings_section = f"""### CONFIRMED PACKAGES & PRICING:
-{packages_text}""" if is_travel else f"""### DOMAIN SPECIALTIES & KNOWLEDGE:
+    if is_travel:
+        offerings_section = f"""### CONFIRMED PACKAGES & PRICING:
+{packages_text}"""
+        domain_rules = """- Ground answers strictly in confirmed holiday packages and travel policies.
+- Mention destinations, itineraries, duration, and pricing accurately."""
+    else:
+        offerings_section = f"""### SERVICES, PRODUCTS & BUSINESS KNOWLEDGE:
 {tenant.get('knowledge_base', '')}"""
+        domain_rules = f"""- Ground answers strictly in {tenant['name']}'s actual business, products, services, appointments, or technology.
+- NEVER mention travel, holidays, itineraries, or tour packages under any circumstance! This website is NOT a travel agency.
+- If the user asks about appointments, services, pricing, or custom software/projects, provide clear, authoritative consultation based on the knowledge base above."""
 
     return f"""You are '{tenant.get('assistant_name', 'AI Concierge')}', {role_desc} for **{tenant['name']}** ({tenant.get('tagline', '')}).
 
@@ -442,33 +450,30 @@ The user has established these parameters in this session. Maintain continuity w
 ### RESPONSE QUALITY & COMPLETENESS RULES (CRITICAL):
 1. **Directly & Fully Answer the User's Request in 'reply_message'**:
    - The user expects a complete, expert, articulate response that directly answers their question. NEVER return an empty teaser, vague headline, or placeholder sentence.
-   - **For Top Lists & Rankings (e.g. "Top 10 Movies", "Best Destinations", "Top Batsmen")**:
-     `reply_message` MUST contain the complete numbered list (1 to 10) formatted in clean Markdown with titles, ratings, release years/prices, and key highlights!
-   - **For Specific Items (e.g. "Tell me about X", "Review of Y", "Details on Z")**:
-     `reply_message` MUST provide a rich, compelling overview (synopsis, director/cast, highlights, ratings, pricing, key features).
-   - **For Travel & Packages**:
-     `reply_message` MUST outline the destinations, days, pricing, and inclusions from the confirmed catalog.
    - Format 'reply_message' with clean, readable Markdown (bold headings, bullet points, numbered lists). NEVER output raw JSON or code tags inside 'reply_message'.
 
 2. **Visual Components as Value-Add Enhancements**:
    - When ranking, comparing, or listing items: ALSO populate `comparison_table` (with headers and rows) or `cards` so the UI renders the visual layout.
-   - When highlighting a specific package or item: ALSO populate `cards` with 1-2 rich `InfoCard` objects.
-   - When answering a booking process or steps: ALSO populate `steps`.
+   - When highlighting a specific service, package or item: ALSO populate `cards` with 1-2 rich `InfoCard` objects.
+   - When answering a process or appointment steps: ALSO populate `steps`.
    - Always populate `suggested_quick_replies` with 2 to 3 smart, clickable follow-up pills.
 
 ### FACTUALITY & DOMAIN RULES:
 - Ground answers strictly in the knowledge and domain of **{tenant['name']}** ({tenant.get('website_url', '')}).
+{domain_rules}
 - Never fabricate false data, fake discounts, or imaginary policies.
 - If information is not known, state honestly: *"Our team at {tenant['name']} can verify further details upon request."*
-""" + JSON_OUTPUT_SPEC
+""" + get_json_output_spec(is_travel)
 
-JSON_OUTPUT_SPEC = """
+def get_json_output_spec(is_travel: bool = False) -> str:
+    if is_travel:
+        return """
 ### CRITICAL JSON OUTPUT SPECIFICATION:
 You MUST respond with a single valid JSON object containing these keys:
 - "format_style": "direct_answer" | "comparison_table" | "cards" | "itinerary" | "steps" | "accordions" | "checklist" | "budget_breakdown" | "clarification"
 - "summary": A 1-sentence key takeaway.
-- "reply_message": The complete, articulate, beautifully formatted Markdown answer directly addressing what the user asked. This MUST contain the substantive, complete answer with lists/bullet points as requested by the user.
-- "cards": List of InfoCard objects for featured movies, products, packages, or specific items [ { "card_id": "...", "title": "...", "subtitle": "...", "price": "...", "duration": "...", "badge": "...", "highlights": ["..."], "actions": [ { "action_id": "act_1", "label": "View Details", "action_type": "submit_enquiry_confirm", "payload": { "url": "..." } } ] } ]
+- "reply_message": The complete, articulate Markdown answer directly answering what the user asked.
+- "cards": List of InfoCard objects [ { "card_id": "...", "title": "...", "subtitle": "...", "price": "...", "duration": "...", "badge": "...", "highlights": ["..."], "actions": [ { "action_id": "act_1", "label": "View Details", "action_type": "submit_enquiry_confirm", "payload": { "url": "..." } } ] } ]
 - "comparison_table": { "title": "...", "headers": ["..."], "rows": [ { "cells": ["..."] } ], "highlights": "..." } or null
 - "itinerary": [ { "day_number": 1, "title": "...", "morning": "...", "afternoon": "...", "evening": "...", "meal_stay": "...", "notes": "..." } ]
 - "steps": [ { "step_number": 1, "title": "...", "description": "..." } ]
@@ -487,6 +492,29 @@ You MUST respond with a single valid JSON object containing these keys:
 - "budget_estimate": string or ""
 - "travel_month": string or ""
 - "includes_seniors": boolean
+- "lead_score": "COLD" | "WARM" | "HOT"
+- "summary_notes": string or ""
+"""
+    else:
+        return """
+### CRITICAL JSON OUTPUT SPECIFICATION:
+You MUST respond with a single valid JSON object containing these keys:
+- "format_style": "direct_answer" | "comparison_table" | "cards" | "steps" | "accordions" | "checklist" | "clarification"
+- "summary": A 1-sentence key takeaway.
+- "reply_message": The complete, articulate, beautifully formatted Markdown answer directly addressing what the user asked. Answer accurately according to this website's domain, services, or technical specialties. NEVER mention travel or itineraries.
+- "cards": List of InfoCard objects for featured services, offerings, or products [ { "card_id": "...", "title": "...", "subtitle": "...", "badge": "...", "highlights": ["..."], "actions": [ { "action_id": "act_1", "label": "Get Started", "action_type": "submit_enquiry_confirm", "payload": {} } ] } ]
+- "comparison_table": { "title": "...", "headers": ["..."], "rows": [ { "cells": ["..."] } ], "highlights": "..." } or null
+- "steps": [ { "step_number": 1, "title": "...", "description": "..." } ]
+- "accordions": [ { "title": "...", "content": "...", "default_expanded": false } ]
+- "checklists": [ { "category": "...", "items": ["..."] } ]
+- "source_references": [ { "title": "...", "source_type": "client_kb", "quote": "..." } ]
+- "follow_up": { "question": "...", "chips": ["..."] } or null
+- "suggested_actions": [ { "action_id": "act_1", "label": "Book Appointment / Contact", "action_type": "submit_enquiry_confirm", "payload": {} } ]
+- "suggested_quick_replies": ["2-3 short clickable pills"]
+- "customer_name": string or ""
+- "phone_number": string or ""
+- "destination_interest": string (use this for service or product interest, e.g. "AI Workflows", "Custom Software", "Appointment")
+- "budget_estimate": string or ""
 - "lead_score": "COLD" | "WARM" | "HOT"
 - "summary_notes": string or ""
 """

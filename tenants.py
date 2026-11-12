@@ -7,6 +7,34 @@ from database import init_db, upsert_tenant, set_tenant_packages, get_connection
 
 SEED_TENANTS = [
     {
+        "id": "tenant_nexo",
+        "slug": "nexo",
+        "assistant_id": "asst_nexo",
+        "name": "NeXo",
+        "category": "agency_saas",
+        "tagline": "Universal Multi-Tenant AI Concierge & Lead Automation Platform",
+        "website_url": "https://prakruthi-ai-concierge.vercel.app",
+        "logo_url": "",
+        "primary_color": "#09090b",
+        "secondary_color": "#18181b",
+        "accent_color": "#06b6d4",
+        "assistant_name": "NeXo AI",
+        "welcome_message": "Hello! I am NeXo, your intelligent digital concierge. How can I assist you today?",
+        "personality_prompt": "You are 'NeXo AI', a universal, state-of-the-art AI concierge and lead capture assistant for modern businesses.",
+        "knowledge_base": "NeXo is an embeddable AI concierge platform providing 24/7 lead capture, smart Q&A, and workflow automation for any business website.",
+        "supported_languages": "English, Hindi",
+        "contact_phone": "",
+        "contact_email": "",
+        "contact_address": "",
+        "webhook_url": "",
+        "allowed_domains": "*",
+        "is_active": 1,
+        "default_detail_level": "standard",
+        "tone_of_voice": "Professional, concise, and helpful AI assistant",
+        "store_chat_history": 1,
+        "packages": []
+    },
+    {
         "id": "tenant_prakruthi",
         "slug": "prakruthi-holidays",
         "assistant_id": "asst_prakruthi_kammanahalli",
@@ -480,7 +508,7 @@ SEED_TENANTS = [
         "allowed_domains": "*",
         "is_active": 1,
         "default_detail_level": "standard",
-        "tone_of_voice": "Professional, warm, and expert travel consultant",
+        "tone_of_voice": "Professional, innovative, and expert software systems architect",
         "store_chat_history": 1,
         "packages": []
     },

@@ -395,7 +395,7 @@ async def get_widget_config(
         )
 
     packages = get_tenant_packages(tenant["id"])
-    category = tenant.get("category", "travel")
+    category = tenant.get("category", "general")
     has_packages = len(packages) > 0 and category == "travel"
 
     perms = {}
@@ -495,8 +495,8 @@ async def chat_endpoint(req: ChatRequest, request: Request):
             except Exception:
                 pass
     if not tenant:
-        # Default to Prakruthi Holidays
-        tenant = get_tenant_by_slug("prakruthi-holidays")
+        # Default fallback to NeXo / Devlancer
+        tenant = get_tenant_by_slug("nexo") or get_tenant_by_slug("devlancer") or get_tenant_by_slug("prakruthi-holidays")
 
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant agency not found")
@@ -756,6 +756,23 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                     **lead_payload
                 }
                 asyncio.create_task(fire_webhook_background(webhook_url, lead_webhook_data))
+
+            # Auto-route to WhatsApp if tenant has contact phone configured
+            if tenant.get("contact_phone"):
+                clean_target_phone = re.sub(r"[^\d]", "", tenant["contact_phone"])
+                if clean_target_phone:
+                    if len(clean_target_phone) == 10:
+                        clean_target_phone = "91" + clean_target_phone
+                    wa_text = f"Hi {tenant['name']}! I submitted an enquiry for {inquiry_target}. My contact: {contact_label}."
+                    from urllib.parse import quote
+                    wa_url = f"https://wa.me/{clean_target_phone}?text={quote(wa_text)}"
+                    if not any((getattr(a, 'label', '') or getattr(a, 'title', '')).lower().startswith("whatsapp") for a in parsed.suggested_actions):
+                        from ai_engine import ActionItem, ActionPayload
+                        parsed.suggested_actions.append(ActionItem(
+                            label="Confirm on WhatsApp",
+                            action_type="open_url",
+                            payload=ActionPayload(url=wa_url)
+                        ))
 
         comp_table = None
         if parsed.comparison_table:
@@ -1167,7 +1184,7 @@ class ManualLeadInput(BaseModel):
     travel_month: Optional[str] = "Flexible"
     includes_seniors: bool = False
     notes: Optional[str] = ""
-    tenant_slug: Optional[str] = "prakruthi-holidays"
+    tenant_slug: Optional[str] = "nexo"
     assistant_id: Optional[str] = None
 
 @app.post("/api/manual-lead")
@@ -1178,9 +1195,9 @@ async def api_submit_manual_lead(req: ManualLeadInput):
     if not tenant and req.tenant_slug:
         tenant = get_tenant_by_slug(req.tenant_slug)
     if not tenant:
-        tenant = get_tenant_by_slug("prakruthi-holidays")
+        tenant = get_tenant_by_slug("nexo") or get_tenant_by_slug("devlancer") or get_tenant_by_slug("prakruthi-holidays")
 
-    tenant_id = tenant["id"] if tenant else "tenant_prakruthi"
+    tenant_id = tenant["id"] if tenant else "tenant_nexo"
 
     lead_payload = {
         "tenant_id": tenant_id,
@@ -1310,9 +1327,9 @@ async def api_execute_action(req: ActionExecuteRequest, request: Request):
     if not tenant and req.tenant_id:
         tenant = get_tenant_by_id(req.tenant_id)
     if not tenant:
-        tenant = get_tenant_by_slug("prakruthi-holidays")
+        tenant = get_tenant_by_slug("nexo") or get_tenant_by_slug("devlancer") or get_tenant_by_slug("prakruthi-holidays")
 
-    tenant_id = tenant["id"] if tenant else "tenant_prakruthi"
+    tenant_id = tenant["id"] if tenant else "tenant_nexo"
 
     # Action 1: Explicit Confirmation Before Submitting Personal Lead to CRM
     if act_type == "submit_enquiry_confirm":
@@ -1423,9 +1440,9 @@ async def api_regenerate_chat(req: RegenerateRequest, request: Request):
     if not tenant and req.tenant_id:
         tenant = get_tenant_by_id(req.tenant_id)
     if not tenant:
-        tenant = get_tenant_by_slug("prakruthi-holidays")
+        tenant = get_tenant_by_slug("nexo") or get_tenant_by_slug("devlancer") or get_tenant_by_slug("prakruthi-holidays")
 
-    tenant_id = tenant["id"] if tenant else "tenant_prakruthi"
+    tenant_id = tenant["id"] if tenant else "tenant_nexo"
     ctx = get_session_context(tenant_id, req.session_id)
     last_msg = ctx.get("last_user_message") or "Tell me about your holiday packages"
 

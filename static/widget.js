@@ -91,7 +91,7 @@
       } else if (sniff.host && sniff.host !== 'localhost' && sniff.host !== '127.0.0.1') {
         query = `domain=${encodeURIComponent(sniff.host)}&title=${encodeURIComponent(sniff.title)}&meta_desc=${encodeURIComponent(sniff.metaDesc || '')}&theme_color=${encodeURIComponent(sniff.themeColor || '')}`;
       } else {
-        query = `assistant_id=asst_prakruthi_kammanahalli`;
+        query = `tenant_slug=nexo`;
       }
       const url = `${baseUrl}/api/widget/config?${query}`;
       const res = await fetch(url);
@@ -100,18 +100,18 @@
       currentDetailMode = tenantConfig.default_detail_level || "standard";
       initWidget();
     } catch (err) {
-      console.warn("[Devlancer AI Widget] Error loading config, using fallback:", err);
+      console.warn("[NeXo AI Widget] Error loading config, using fallback:", err);
       tenantConfig = {
-        name: "Devlancer Travel AI",
-        assistant_name: "Travel Concierge",
-        slug: "prakruthi-holidays",
-        primary_color: "#18181b",
-        secondary_color: "#09090b",
-        accent_color: "#3b82f6",
-        welcome_message: "Hello! Welcome to our travel concierge. How can we assist your trip planning today?",
-        contact_phone: "+91 9845370515",
+        name: "NeXo AI",
+        assistant_name: "NeXo",
+        slug: "nexo",
+        primary_color: "#09090b",
+        secondary_color: "#18181b",
+        accent_color: "#06b6d4",
+        welcome_message: "Hello! Welcome to our digital assistant. How may I help you today?",
+        contact_phone: "",
         default_detail_level: "standard",
-        starter_prompts: ["Explore Top Packages", "Plan a 5-Day Trip", "Senior Citizen Tours", "Cancellation Policies"],
+        starter_prompts: ["Learn about services", "Book a consultation", "Get in touch"],
         packages: []
       };
       initWidget();
@@ -1139,6 +1139,139 @@
         border-color: rgba(255,255,255,0.1);
       }
       #chat-window.dark-theme .calc-price { color: #ffffff; }
+
+      /* ========================================================= */
+      /* CUTE ROBOT TEASER POPUP                                   */
+      /* ========================================================= */
+      .robot-teaser-container {
+        position: fixed;
+        bottom: 82px;
+        right: 24px;
+        z-index: 2147483642;
+        display: none;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+        pointer-events: auto;
+        opacity: 0;
+        transform: translateY(14px) scale(0.94);
+        transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        user-select: none;
+      }
+      .robot-teaser-container.visible {
+        display: flex;
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      .robot-speech-bubble {
+        position: relative;
+        background: #ffffff;
+        border: 1px solid rgba(0, 242, 254, 0.45);
+        box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.25), 0 0 16px rgba(0, 242, 254, 0.16);
+        border-radius: 14px;
+        padding: 10px 14px;
+        max-width: 250px;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        text-align: left;
+      }
+      .robot-speech-bubble:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 42px -6px rgba(0, 0, 0, 0.3), 0 0 22px rgba(0, 242, 254, 0.3);
+      }
+      .robot-speech-bubble::after {
+        content: '';
+        position: absolute;
+        bottom: -7px;
+        right: 28px;
+        width: 12px;
+        height: 12px;
+        background: #ffffff;
+        border-right: 1px solid rgba(0, 242, 254, 0.45);
+        border-bottom: 1px solid rgba(0, 242, 254, 0.45);
+        transform: rotate(45deg);
+      }
+      .robot-teaser-close {
+        position: absolute;
+        top: 6px;
+        right: 8px;
+        background: none;
+        border: none;
+        color: #94a3b8;
+        font-size: 16px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 2px 5px;
+        border-radius: 4px;
+        transition: color 0.15s, background 0.15s;
+      }
+      .robot-teaser-close:hover {
+        color: #0f172a;
+        background: #f1f5f9;
+      }
+      .robot-greeting-title {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: #0284c7;
+        font-weight: 700;
+        margin-bottom: 3px;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+      .robot-online-pulse {
+        width: 6.5px;
+        height: 6.5px;
+        border-radius: 50%;
+        background: #00f2fe;
+        box-shadow: 0 0 8px #00f2fe;
+        animation: pulseCyan 2s infinite;
+      }
+      @keyframes pulseCyan {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.35; transform: scale(0.85); }
+      }
+      .robot-speech-msg {
+        font-size: 12.5px;
+        color: #1e293b;
+        font-weight: 500;
+        line-height: 1.35;
+        padding-right: 14px;
+      }
+      .robot-action-hint {
+        font-size: 10px;
+        color: #64748b;
+        margin-top: 6px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+      }
+      .cute-robot-avatar {
+        cursor: pointer;
+        animation: robotFloat 3.2s ease-in-out infinite;
+        filter: drop-shadow(0 10px 14px rgba(0,0,0,0.22));
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        margin-right: 4px;
+      }
+      .cute-robot-avatar:hover {
+        transform: scale(1.08) translateY(-2px);
+      }
+      @keyframes robotFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-7px); }
+      }
+      #chat-window.dark-theme ~ #nexo-robot-teaser .robot-speech-bubble {
+        background: #16161a;
+        box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.7), 0 0 18px rgba(0, 242, 254, 0.2);
+      }
+      #chat-window.dark-theme ~ #nexo-robot-teaser .robot-speech-bubble::after {
+        background: #16161a;
+      }
+      #chat-window.dark-theme ~ #nexo-robot-teaser .robot-speech-msg {
+        color: #f1f5f9;
+      }
     `;
     shadow.appendChild(style);
 
@@ -1175,6 +1308,101 @@
     `;
     launcher.onclick = toggleChat;
     shadow.appendChild(launcher);
+
+    // Cute Proactive Robot Teaser Popup (Matching User Specs)
+    const robotPopup = document.createElement('div');
+    robotPopup.id = 'nexo-robot-teaser';
+    robotPopup.className = 'robot-teaser-container';
+    robotPopup.setAttribute('data-lenis-prevent', 'true');
+    robotPopup.setAttribute('data-lenis-prevent-wheel', 'true');
+    robotPopup.setAttribute('data-lenis-prevent-touch', 'true');
+    robotPopup.setAttribute('data-scroll-prevent', 'true');
+
+    const cleanWelcome = (tenantConfig.welcome_message || "Hello! How may I help you today?")
+      .replace(/[*#_~`]/g, '')
+      .trim();
+    const shortGreeting = cleanWelcome.length > 90 ? cleanWelcome.slice(0, 90) + '...' : cleanWelcome;
+
+    robotPopup.innerHTML = `
+      <div class="robot-speech-bubble" id="robot-bubble-click" title="Click to chat with AI">
+        <button type="button" class="robot-teaser-close" id="robot-teaser-close" aria-label="Dismiss">&times;</button>
+        <div class="robot-greeting-title">
+          <span class="robot-online-pulse"></span>
+          <span>${escapeHtml(tenantConfig.assistant_name || 'NeXo AI')}</span>
+        </div>
+        <div class="robot-speech-msg">${escapeHtml(shortGreeting)}</div>
+        <div class="robot-action-hint">
+          <span>Click to chat</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </div>
+      </div>
+      <div class="cute-robot-avatar" id="robot-avatar-trigger" title="Chat with AI Concierge">
+        <svg class="robot-svg-model" viewBox="0 0 160 180" width="70" height="78" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="nexoCyanGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="3.5" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+            <linearGradient id="nexoBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#ffffff" />
+              <stop offset="70%" stop-color="#f3f4f6" />
+              <stop offset="100%" stop-color="#cbd5e1" />
+            </linearGradient>
+            <linearGradient id="nexoVisorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#18181b" />
+              <stop offset="100%" stop-color="#020617" />
+            </linearGradient>
+            <linearGradient id="nexoCyanGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#0284c7" />
+              <stop offset="50%" stop-color="#00f2fe" />
+              <stop offset="100%" stop-color="#0284c7" />
+            </linearGradient>
+          </defs>
+          
+          <!-- Headphone Top Band -->
+          <path d="M 40 58 C 38 16, 122 16, 120 58" fill="none" stroke="url(#nexoCyanGrad)" stroke-width="9" stroke-linecap="round"/>
+          
+          <!-- Robot Lower Base / Body -->
+          <path d="M 50 114 C 42 136, 46 162, 80 162 C 114 162, 118 136, 110 114 Z" fill="url(#nexoBodyGrad)" stroke="#94a3b8" stroke-width="2"/>
+          
+          <!-- Cute Rounded Arms -->
+          <path d="M 44 122 C 32 130, 34 148, 46 144" fill="url(#nexoBodyGrad)" stroke="#94a3b8" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M 116 122 C 128 130, 126 148, 114 144" fill="url(#nexoBodyGrad)" stroke="#94a3b8" stroke-width="2.2" stroke-linecap="round"/>
+          
+          <!-- Chest Screen Matrix -->
+          <rect x="60" y="126" width="40" height="22" rx="7" fill="#09090b" stroke="#334155" stroke-width="1.2"/>
+          <!-- Glowing Matrix Heart Pattern on Chest -->
+          <circle cx="69" cy="133" r="1.8" fill="#00f2fe" filter="url(#nexoCyanGlow)"/>
+          <circle cx="75" cy="133" r="1.8" fill="#00f2fe" filter="url(#nexoCyanGlow)"/>
+          <circle cx="85" cy="133" r="1.8" fill="#00f2fe" filter="url(#nexoCyanGlow)"/>
+          <circle cx="91" cy="133" r="1.8" fill="#00f2fe" filter="url(#nexoCyanGlow)"/>
+          <circle cx="72" cy="139" r="1.8" fill="#00f2fe" filter="url(#nexoCyanGlow)"/>
+          <circle cx="80" cy="142" r="2.0" fill="#00f2fe" filter="url(#nexoCyanGlow)"/>
+          <circle cx="88" cy="139" r="1.8" fill="#00f2fe" filter="url(#nexoCyanGlow)"/>
+
+          <!-- Robot Head -->
+          <ellipse cx="80" cy="66" rx="43" ry="36" fill="url(#nexoBodyGrad)" stroke="#94a3b8" stroke-width="2"/>
+          
+          <!-- Headphone Side Ear-Cups with Cyan Glow Ring -->
+          <ellipse cx="36" cy="66" rx="8" ry="16" fill="#09090b" stroke="#00f2fe" stroke-width="3" filter="url(#nexoCyanGlow)"/>
+          <ellipse cx="124" cy="66" rx="8" ry="16" fill="#09090b" stroke="#00f2fe" stroke-width="3" filter="url(#nexoCyanGlow)"/>
+
+          <!-- Dark Curved Visor Faceplate -->
+          <ellipse cx="80" cy="68" rx="30" ry="23" fill="url(#nexoVisorGrad)" stroke="#27272a" stroke-width="1.8"/>
+
+          <!-- Left Eye: Futuristic Glowing Cyan Rings (Matching User Photo) -->
+          <circle cx="67" cy="68" r="9.5" fill="none" stroke="#00f2fe" stroke-width="3" filter="url(#nexoCyanGlow)"/>
+          <circle cx="67" cy="68" r="4.2" fill="#00f2fe" filter="url(#nexoCyanGlow)"/>
+          <circle cx="69" cy="65.5" r="1.6" fill="#ffffff"/>
+
+          <!-- Right Eye: Futuristic Glowing Cyan Rings (Matching User Photo) -->
+          <circle cx="93" cy="68" r="9.5" fill="none" stroke="#00f2fe" stroke-width="3" filter="url(#nexoCyanGlow)"/>
+          <circle cx="93" cy="68" r="4.2" fill="#00f2fe" filter="url(#nexoCyanGlow)"/>
+          <circle cx="95" cy="65.5" r="1.6" fill="#ffffff"/>
+        </svg>
+      </div>
+    `;
+    shadow.appendChild(robotPopup);
 
     // Chat Window
     const win = document.createElement('div');
@@ -1285,7 +1513,7 @@
       </form>
 
       <div class="powered-by">
-        Powered by <a href="https://devlancer.in" target="_blank">Devlancer</a> • Minimalist AI Engine
+        Powered by <a href="https://devlancer.in" target="_blank">NeXo</a> • Universal AI Concierge
       </div>
 
       <!-- Cost Calculator Modal -->
@@ -1414,10 +1642,46 @@
       isOpen = !isOpen;
       win.style.display = isOpen ? 'flex' : 'none';
       if (isOpen) {
+        if (robotPopup) robotPopup.classList.remove('visible');
         inputField.focus();
         msgFeed.scrollTop = msgFeed.scrollHeight;
       }
     }
+
+    // Robot Teaser Interaction & Auto-Trigger
+    const bubbleEl = robotPopup.querySelector('#robot-bubble-click');
+    const avatarEl = robotPopup.querySelector('#robot-avatar-trigger');
+    const closeTeaserBtn = robotPopup.querySelector('#robot-teaser-close');
+
+    const openChatFromTeaser = (e) => {
+      if (e.target && e.target.id === 'robot-teaser-close') return;
+      if (robotPopup) robotPopup.classList.remove('visible');
+      if (!isOpen) toggleChat();
+    };
+
+    if (bubbleEl) bubbleEl.onclick = openChatFromTeaser;
+    if (avatarEl) avatarEl.onclick = openChatFromTeaser;
+    if (closeTeaserBtn) {
+      closeTeaserBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (robotPopup) robotPopup.classList.remove('visible');
+        try {
+          sessionStorage.setItem('nexo_robot_dismissed_' + (tenantConfig.slug || 'default'), 'true');
+        } catch (err) {}
+      };
+    }
+
+    // Auto-display cute robot popup after 1.2s delay
+    setTimeout(() => {
+      try {
+        const isDismissed = sessionStorage.getItem('nexo_robot_dismissed_' + (tenantConfig.slug || 'default'));
+        if (!isDismissed && !isOpen && robotPopup) {
+          robotPopup.classList.add('visible');
+        }
+      } catch (e) {
+        if (!isOpen && robotPopup) robotPopup.classList.add('visible');
+      }
+    }, 1200);
 
     // Toggle Full-Screen
     maxBtn.onclick = () => {
@@ -1681,7 +1945,7 @@
             <span class="typing-dot"></span>
             <span class="typing-dot"></span>
           </div>
-          <span style="color: #71717a; font-size: 11.5px; font-weight: 500;">${tenantConfig.category === 'travel' ? 'Consulting travel desk...' : 'Consulting assistant...'}</span>
+          <span style="color: #71717a; font-size: 11.5px; font-weight: 500;">${tenantConfig.category === 'travel' ? 'Consulting travel desk...' : (tenantConfig.assistant_name || 'NeXo AI') + ' is thinking...'}</span>
         </div>
       `;
       msgFeed.appendChild(typingWrap);
