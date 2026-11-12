@@ -6,15 +6,32 @@ Provides robust tenant isolation, data persistence, and relationship integrity.
 import sqlite3
 import json
 import time
+import os
+import shutil
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
-DB_PATH = Path(__file__).resolve().parent / "devlancer_platform.db"
+BASE_DIR = Path(__file__).resolve().parent
+
+# On Vercel / serverless runtimes, file system is read-only except /tmp
+if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    DB_PATH = Path("/tmp/devlancer_platform.db")
+    bundled_db = BASE_DIR / "devlancer_platform.db"
+    if bundled_db.exists() and not DB_PATH.exists():
+        try:
+            shutil.copy2(bundled_db, DB_PATH)
+        except Exception:
+            pass
+else:
+    DB_PATH = BASE_DIR / "devlancer_platform.db"
 
 def get_connection() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH, timeout=10.0)
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode = WAL;")
+    try:
+        conn.execute("PRAGMA journal_mode = WAL;")
+    except Exception:
+        conn.execute("PRAGMA journal_mode = DELETE;")
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn
 
