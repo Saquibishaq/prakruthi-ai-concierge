@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prakruthi Holidays – AI Concierge & Lead Automation Command Center</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary-emerald: #047857;
+      --primary-dark: #064e3b;
+      --accent-gold: #f59e0b;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow: hidden;
+    }
+    
+    /* Markdown & Prose Styling */
+    .prose {
+      font-size: 0.8125rem;
+      line-height: 1.55;
+      color: #1e293b;
+    }
+    .prose p {
+      margin-bottom: 0.6rem;
+    }
+    .prose p:last-child {
+      margin-bottom: 0;
+    }
+    .prose ul {
+      list-style-type: none;
+      padding-left: 0;
+      margin-bottom: 0.6rem;
+    }
+    .prose ul li {
+      position: relative;
+      padding-left: 1.25rem;
+      margin-bottom: 0.25rem;
+    }
+    .prose ul li::before {
+      content: "•";
+      position: absolute;
+      left: 0.25rem;
+      color: #059669;
+      font-weight: bold;
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+    .prose ol {
+      list-style-type: decimal;
+      padding-left: 1.25rem;
+      margin-bottom: 0.6rem;
+    }
+    .prose strong {
+      color: #064e3b;
+      font-weight: 700;
+    }
+    .prose h1, .prose h2, .prose h3, .prose h4 {
+      color: #0f172a;
+      font-weight: 700;
+      margin-top: 0.75rem;
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .prose h3 {
+      font-size: 0.9rem;
+      color: #065f46;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 0.2rem;
+    }
+    
+    /* GFM Markdown Tables */
+    .prose table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin: 0.75rem 0;
+      font-size: 0.75rem;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .prose thead {
+      background: linear-gradient(135deg, #065f46, #047857);
+      color: #ffffff;
+    }
+    .prose th {
+      padding: 0.5rem 0.65rem;
+      font-weight: 600;
+      text-align: left;
+      border-bottom: 1px solid #047857;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.03em;
+    }
+    .prose td {
+      padding: 0.45rem 0.65rem;
+      border-bottom: 1px solid #e2e8f0;
+      background-color: #ffffff;
+    }
+    .prose tr:nth-child(even) td {
+      background-color: #f8fafc;
+    }
+    .prose tr:hover td {
+      background-color: #ecfdf5;
+    }
+    .prose blockquote {
+      border-left: 3px solid #059669;
+      background-color: #f0fdf4;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0 0.375rem 0.375rem 0;
+      margin: 0.5rem 0;
+      font-style: italic;
+      color: #065f46;
+    }
+
+    /* Itinerary Step Highlight */
+    .itinerary-step {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-left: 3px solid #059669;
+      border-radius: 0.5rem;
+      padding: 0.6rem 0.75rem;
+      margin: 0.4rem 0;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    /* Animations & Pulse */
+    @keyframes pulse-ring {
+      0% {
+        transform: scale(0.96);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      }
+      70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 14px rgba(16, 185, 129, 0);
+      }
+      100% {
+        transform: scale(0.96);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+      }
+    }
+    .pulse-btn {
+      animation: pulse-ring 2.2s infinite;
+    }
+
+    /* Mic Listening Pulse */
+    @keyframes mic-wave {
+      0% { transform: scale(1); background-color: #ef4444; }
+      50% { transform: scale(1.15); background-color: #dc2626; box-shadow: 0 0 12px rgba(239, 68, 68, 0.8); }
+      100% { transform: scale(1); background-color: #ef4444; }
+    }
+    .mic-recording {
+      animation: mic-wave 1.2s infinite;
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.35);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.6);
+    }
+
+    /* Search Highlight */
+    .search-match {
+      background-color: #fef08a !important;
+      color: #854d0e !important;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+
+    /* Print styles */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #chat-messages, #chat-messages * {
+        visibility: visible;
+      }
+      #chat-messages {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: auto;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-900 h-screen w-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- ================================================================= -->
+  <!-- PRESENTER CONTROL BAR (Sales Pitch & Live Mode Toggles)          -->
+  <!-- ================================================================= -->
+  <header id="presenter-bar" class="h-12 bg-slate-900 border-b border-slate-700/80 px-4 flex items-center justify-between text-xs text-slate-200 z-50 shrink-0">
+    <div class="flex items-center gap-3">
+      <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2.5 py-1 rounded-full font-semibold flex items-center gap-1.5 shadow-sm">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        LIVE CLIENT DEMO
+      </span>
+      <span class="font-medium text-slate-300 hidden sm:inline">Client: <strong class="text-white">Prakruthi Holidays (Bengaluru)</strong></span>
+      <span class="text-slate-600 hidden md:inline">|</span>
+      <span class="text-slate-400 hidden md:inline">Engine: <strong class="text-emerald-300">Gemini 3.5 Flash-Lite + Live Sheets Webhook</strong></span>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button onclick="runDemoScenario('senior')" title="Test Senior Citizen Query" class="bg-slate-800 hover:bg-slate-700 hover:border-emerald-500/50 border border-slate-600 text-slate-200 px-2.5 py-1 rounded transition shadow-sm font-medium flex items-center gap-1">
+        <span>👵</span> <span class="hidden sm:inline">Senior Tour Query</span>
+      </button>
+      <button onclick="runDemoScenario('kannada')" title="Test Kannada Query" class="bg-slate-800 hover:bg-slate-700 hover:border-emerald-500/50 border border-slate-600 text-slate-200 px-2.5 py-1 rounded transition shadow-sm font-medium flex items-center gap-1">
+        <span>🇮🇳</span> <span class="hidden sm:inline">Kannada Query</span>
+      </button>
+      <button onclick="toggleCrmDrawer()" class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 px-3 py-1 rounded font-semibold transition flex items-center gap-1.5 shadow-sm">
+        <span>📊</span> <span>Live CRM</span> (<span id="lead-counter">0</span>)
+      </button>
+    </div>
+  </header>
+
+  <!-- ================================================================= -->
+  <!-- MAIN VIEWPORT: Live Website + Slide-Over CRM Drawer              -->
+  <!-- ================================================================= -->
+  <main class="relative flex-1 w-full overflow-hidden flex">
+    <!-- Live Website Background Iframe -->
+    <div class="flex-1 h-full relative bg-slate-800">
+      <iframe
+        id="client-website-frame"
+        src="https://www.prakruthiholidays.com/"
+        class="w-full h-full border-0"
+        title="Prakruthi Holidays Live Website"
+        loading="lazy">
+      </iframe>
+    </div>
+
+    <!-- =============================================================== -->
+    <!-- SLIDE-OVER CRM & AI TELEMETRY DRAWER                            -->
+    <!-- =============================================================== -->
+    <aside id="crm-drawer" class="w-[380px] sm:w-[420px] bg-slate-900 border-l border-slate-700/80 text-slate-100 h-full flex flex-col transition-all duration-300 hidden z-40 shadow-2xl">
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+        <div>
+          <h3 class="font-bold text-sm text-white flex items-center gap-2">
+            <span>⚡</span> Real-Time AI Lead Extraction
+          </h3>
+          <p class="text-[11px] text-slate-400">Watches conversation & syncs directly to Google Sheets</p>
+        </div>
+        <button onclick="toggleCrmDrawer()" class="text-slate-400 hover:text-white text-xl px-2 leading-none" aria-label="Close Drawer">&times;</button>
+      </div>
+
+      <!-- Current Conversation Live Extraction State -->
+      <div class="p-4 border-b border-slate-800 bg-slate-900/70">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] uppercase tracking-wider font-bold text-emerald-400">Live Session Memory</span>
+          <span id="live-score-badge" class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold">COLD</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-xs bg-slate-950 p-3 rounded-lg border border-slate-800/80">
+          <div>
+            <span class="text-slate-500 block text-[10px] uppercase tracking-wider">Customer Name</span>
+            <span id="st-name" class="font-semibold text-slate-200">—</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block text-[10px] uppercase tracking-wider">WhatsApp / Phone</span>
+            <span id="st-phone" class="font-semibold text-emerald-400">—</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block text-[10px] uppercase tracking-wider">Destination</span>
+            <span id="st-dest" class="font-semibold text-slate-200">—</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block text-[10px] uppercase tracking-wider">Travel Category</span>
+            <span id="st-type" class="font-semibold text-slate-200">—</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block text-[10px] uppercase tracking-wider">Travelers / Pax</span>
+            <span id="st-pax" class="font-semibold text-slate-200">—</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block text-[10px] uppercase tracking-wider">Senior Citizens?</span>
+            <span id="st-seniors" class="font-semibold text-slate-200">No</span>
+          </div>
+          <div class="col-span-2">
+            <span class="text-slate-500 block text-[10px] uppercase tracking-wider">AI Sales Summary</span>
+            <span id="st-notes" class="text-slate-300 italic text-[11px] block mt-0.5 leading-relaxed">Waiting for customer input...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Captured CRM Rows Log -->
+      <div class="flex-1 p-4 overflow-y-auto">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-[11px] uppercase tracking-wider font-bold text-amber-400">Synced Google Sheets Leads</span>
+          <span class="text-[10px] text-slate-400">Live Webhook Connected</span>
+        </div>
+        <div id="crm-leads-list" class="space-y-2.5 text-xs">
+          <div class="text-center py-8 text-slate-500 border border-dashed border-slate-800 rounded-lg p-4">
+            No leads pushed yet.<br/>
+            <span class="text-slate-400 font-medium">Enter a phone number in the chat to watch it sync live!</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- =============================================================== -->
+    <!-- ADVANCED AI CONCIERGE WORKSPACE (Floating / Fullscreen Mode)     -->
+    <!-- =============================================================== -->
+    <div id="chat-wrapper" class="fixed z-50 transition-all duration-300 bottom-5 right-5 flex flex-col items-end">
+      
+      <!-- Main Chat Window (Supports Normal Floating vs Maximize Full-Screen View) -->
+      <div
+        id="chat-window"
+        class="bg-white rounded-2xl shadow-2xl border border-slate-200/90 flex flex-col overflow-hidden transition-all duration-300 mb-3 w-[385px] sm:w-[420px] h-[600px]">
+        
+        <!-- ============================================================= -->
+        <!-- PREMIUM BRANDED HEADER WITH MAXIMIZE & TOOLBAR CONTROLS        -->
+        <!-- ============================================================= -->
+        <div class="bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-800 p-3 sm:p-3.5 text-white flex items-center justify-between shadow-md shrink-0">
+          
+          <!-- Left: Logo, Title, Online Status & Maximize Button -->
+          <div class="flex items-center gap-2.5 min-w-0">
+            <!-- Maximize / Restore Toggle Button (Left-Side Control) -->
+            <button
+              id="maximize-btn"
+              onclick="toggleFullscreenChat()"
+              title="Maximize / Full Screen Mode"
+              class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-emerald-100 hover:text-white flex items-center justify-center transition border border-white/15 shrink-0"
+              aria-label="Maximize window">
+              <svg id="max-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+              </svg>
+              <svg id="restore-icon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9L4 4m0 0v4m0-4h4m6 6l5-5m0 0v4m0-4h-4M9 15l-5 5m0 0v-4m0 4h4m6-6l5 5m0 0v-4m0 4h-4"/>
+              </svg>
+            </button>
+
+            <!-- Brand Icon -->
+            <div class="w-9 h-9 rounded-full bg-white/15 backdrop-blur flex items-center justify-center text-lg border border-white/25 shadow-inner shrink-0">
+              🌴
+            </div>
+
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <h4 class="font-bold text-sm leading-tight text-white truncate">Prakruthi Holidays AI</h4>
+                <span class="bg-amber-400 text-slate-950 text-[9px] font-extrabold px-1.5 py-0.2 rounded shadow-sm shrink-0">21+ YRS</span>
+              </div>
+              <p class="text-[10.5px] text-emerald-200 flex items-center gap-1 mt-0.5 font-medium truncate">
+                <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
+                <span>Online • English & ಕನ್ನಡ Concierge</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Right Action Controls (Search, Quick Book, Export, Close) -->
+          <div class="flex items-center gap-1 shrink-0">
+            <!-- Search Toggle -->
+            <button
+              onclick="toggleSearchBar()"
+              title="Search conversation (Ctrl+F)"
+              class="w-7 h-7 rounded-lg hover:bg-white/15 text-emerald-100 hover:text-white flex items-center justify-center transition"
+              aria-label="Search conversation">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </button>
+
+            <!-- Export / Print Menu Toggle -->
+            <button
+              onclick="toggleExportMenu()"
+              title="Export or Print conversation"
+              class="w-7 h-7 rounded-lg hover:bg-white/15 text-emerald-100 hover:text-white flex items-center justify-center transition"
+              aria-label="Export conversation">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+            </button>
+
+            <!-- Quick Book Modal Button -->
+            <button
+              onclick="openQuickBookingModal()"
+              title="Instant Itinerary Form"
+              class="hidden sm:flex items-center gap-1 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold px-2 py-1 rounded text-[10.5px] transition shadow-sm">
+              <span>📋</span> <span>Quick Book</span>
+            </button>
+
+            <!-- Close / Minimize Chat -->
+            <button
+              onclick="toggleChat()"
+              class="w-7 h-7 rounded-lg hover:bg-white/15 text-white/90 hover:text-white flex items-center justify-center text-xl leading-none transition"
+              aria-label="Close Chat">
+              &times;
+            </button>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- IN-CHAT LIVE SEARCH BAR (Collapsible)                          -->
+        <!-- ============================================================= -->
+        <div id="search-bar" class="hidden bg-slate-100 border-b border-slate-200 px-3 py-1.5 flex items-center gap-2 text-xs">
+          <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input
+            id="search-input"
+            type="text"
+            placeholder="Search destination, budget, or dates in chat..."
+            oninput="handleSearch(this.value)"
+            class="flex-1 bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-700 focus:outline-none focus:border-emerald-600"
+          />
+          <button onclick="clearSearch()" class="text-slate-400 hover:text-slate-600 px-1 text-sm">&times;</button>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- VALUE PROP SUB-BANNER & TONE / PERSPECTIVE FILTER PILLS       -->
+        <!-- ============================================================= -->
+        <div class="bg-emerald-50 border-b border-emerald-100 px-3 py-1.5 text-[11px] text-emerald-950 flex items-center justify-between font-semibold shrink-0">
+          <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+            <span class="text-emerald-800 text-[10px] uppercase tracking-wider font-extrabold shrink-0">Focus:</span>
+            <button onclick="setFocusMode('standard', this)" class="mode-pill shrink-0 px-2 py-0.5 rounded-full text-[10.5px] bg-emerald-700 text-white font-medium transition shadow-xs">
+              ⚡ All-Round
+            </button>
+            <button onclick="setFocusMode('senior', this)" class="mode-pill shrink-0 px-2 py-0.5 rounded-full text-[10.5px] bg-white text-emerald-900 border border-emerald-200 font-medium hover:bg-emerald-100 transition shadow-xs">
+              👵 Senior Citizen Focus
+            </button>
+            <button onclick="setFocusMode('itinerary', this)" class="mode-pill shrink-0 px-2 py-0.5 rounded-full text-[10.5px] bg-white text-emerald-900 border border-emerald-200 font-medium hover:bg-emerald-100 transition shadow-xs">
+              🗺️ Day-by-Day Itinerary
+            </button>
+            <button onclick="setFocusMode('budget', this)" class="mode-pill shrink-0 px-2 py-0.5 rounded-full text-[10.5px] bg-white text-emerald-900 border border-emerald-200 font-medium hover:bg-emerald-100 transition shadow-xs">
+              💰 Price & Inclusions
+            </button>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- FULLSCREEN TWO-COLUMN SPLIT CONTAINER                         -->
+        <!-- ============================================================= -->
+        <div class="flex-1 flex overflow-hidden relative">
+          
+          <!-- LEFT / MAIN: Conversational Stream & Message Feed -->
+          <div class="flex-1 flex flex-col h-full overflow-hidden bg-slate-50/70">
+            
+            <!-- Messages Container -->
+            <div id="chat-messages" class="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3.5">
+              
+              <!-- Welcome Hero Card Message -->
+              <div class="flex items-start gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-emerald-700 text-white flex items-center justify-center text-xs shrink-0 mt-0.5 shadow-sm">
+                  🌴
+                </div>
+                <div class="bg-white border border-slate-200/90 rounded-2xl rounded-tl-sm p-4 text-xs text-slate-700 shadow-sm max-w-[90%] sm:max-w-[85%] leading-relaxed">
+                  <div class="flex items-center justify-between border-b border-slate-100 pb-2 mb-2.5">
+                    <span class="font-bold text-emerald-900 text-[13px]">Namaskara! Welcome to Prakruthi Holidays 🙏</span>
+                    <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-semibold">21+ Years in Kammanahalli</span>
+                  </div>
+                  
+                  <p class="mb-2">
+                    We specialize in zero-stress <strong>Senior Citizen Tours, Family Holidays & International Fixed Departures</strong> with caring <strong>Kannada & English</strong> tour managers and delicious homestyle <strong>Indian Meals</strong> abroad.
+                  </p>
+
+                  <!-- Quick Showcase Grid inside Welcome Card -->
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 my-2.5">
+                    <button onclick="sendQuickReply('Tell me about Singapore & Malaysia Tour')" class="text-left bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-200/80 p-2 rounded-lg transition group">
+                      <span class="block text-[10px] text-emerald-800 font-bold uppercase tracking-wider">Bestseller</span>
+                      <strong class="text-slate-900 text-xs block group-hover:text-emerald-700">Singapore-Malaysia</strong>
+                      <span class="text-[11px] text-emerald-700 font-semibold">from ₹1,20,000</span>
+                    </button>
+
+                    <button onclick="sendQuickReply('Tell me about Bali Tour Package')" class="text-left bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-200/80 p-2 rounded-lg transition group">
+                      <span class="block text-[10px] text-emerald-800 font-bold uppercase tracking-wider">Island Special</span>
+                      <strong class="text-slate-900 text-xs block group-hover:text-emerald-700">Bali 6N/7D</strong>
+                      <span class="text-[11px] text-emerald-700 font-semibold">from ₹1,00,000</span>
+                    </button>
+
+                    <button onclick="sendQuickReply('Tell me about Dubai Tour Package')" class="text-left bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-200/80 p-2 rounded-lg transition group col-span-2 sm:col-span-1">
+                      <span class="block text-[10px] text-emerald-800 font-bold uppercase tracking-wider">Luxury & Desert</span>
+                      <strong class="text-slate-900 text-xs block group-hover:text-emerald-700">Dubai 5N/6D</strong>
+                      <span class="text-[11px] text-emerald-700 font-semibold">from ₹1,05,000</span>
+                    </button>
+                  </div>
+
+                  <p class="text-slate-600 mt-2">
+                    Where would you like to travel, or would you like to compare our senior-friendly group dates?
+                  </p>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Toast Alert when Lead is Synced to Google Sheets -->
+            <div id="crm-toast" class="hidden bg-emerald-600 text-white text-[11px] px-3.5 py-1.5 font-semibold text-center animate-bounce shadow flex items-center justify-center gap-2">
+              <span>✅</span> <span>Lead Automatically Synced to Google Sheets CRM!</span>
+            </div>
+
+            <!-- Dynamic Quick Reply Follow-Up Chips -->
+            <div id="quick-replies" class="px-3.5 py-2 bg-slate-50 border-t border-slate-200/70 flex gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+              <button onclick="sendQuickReply('Senior Citizen Group Tours')" class="shrink-0 text-[11px] bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full font-medium transition shadow-xs flex items-center gap-1">
+                <span>👵</span> Senior Citizen Tours
+              </button>
+              <button onclick="sendQuickReply('Singapore & Malaysia 6N/7D Package')" class="shrink-0 text-[11px] bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full font-medium transition shadow-xs flex items-center gap-1">
+                <span>✈️</span> Singapore-Malaysia
+              </button>
+              <button onclick="sendQuickReply('Bali 6N/7D Itinerary & Pricing')" class="shrink-0 text-[11px] bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full font-medium transition shadow-xs flex items-center gap-1">
+                <span>🏝️</span> Bali Package
+              </button>
+              <button onclick="sendQuickReply('Dubai 5N/6D with Indian Meals')" class="shrink-0 text-[11px] bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full font-medium transition shadow-xs flex items-center gap-1">
+                <span>🏙️</span> Dubai Tour
+              </button>
+            </div>
+
+            <!-- Message Composer Form -->
+            <form onsubmit="handleChatSubmit(event)" class="p-2.5 sm:p-3 bg-white border-t border-slate-200 flex items-center gap-2 shrink-0">
+              
+              <!-- Voice Dictation / Speech-to-Text Button -->
+              <button
+                type="button"
+                id="voice-mic-btn"
+                onclick="toggleVoiceRecording()"
+                title="Speak in English or Kannada (Voice Input)"
+                class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-700 flex items-center justify-center transition border border-slate-200 shrink-0"
+                aria-label="Voice input">
+                <svg id="mic-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 02-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+                </svg>
+              </button>
+
+              <!-- Text Input -->
+              <input
+                id="chat-input"
+                type="text"
+                placeholder="Ask in English or Kannada (e.g. Dubai rate eshtu?)..."
+                class="flex-1 text-xs bg-slate-100 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-emerald-600 focus:bg-white text-slate-800 transition"
+                autocomplete="off"
+              />
+
+              <!-- Send Button -->
+              <button
+                type="submit"
+                id="send-btn"
+                class="bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white rounded-xl px-4 py-2.5 text-xs font-semibold transition shadow-sm shrink-0 flex items-center gap-1">
+                <span>Send</span>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
+              </button>
+            </form>
+          </div>
+
+          <!-- =========================================================== -->
+          <!-- RIGHT SIDEBAR: TRIP CALCULATOR & EXECUTIVE COMMAND TOOLS     -->
+          <!-- (Activates in Maximize / Full-Screen Mode)                   -->
+          <!-- =========================================================== -->
+          <div id="fullscreen-sidebar" class="hidden w-[360px] bg-slate-100/90 border-l border-slate-200 p-4 overflow-y-auto space-y-4 shrink-0">
+            
+            <!-- Quick Feature 1: Interactive Trip Cost Estimator -->
+            <div class="bg-white rounded-xl p-3.5 border border-slate-200 shadow-sm">
+              <div class="flex items-center justify-between mb-2.5">
+                <h5 class="font-bold text-xs text-emerald-950 flex items-center gap-1.5">
+                  <span>💰</span> Trip Budget & Pax Calculator
+                </h5>
+                <span class="text-[9px] bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.5 rounded">LIVE</span>
+              </div>
+              
+              <!-- Destination select -->
+              <label class="block text-[10.5px] text-slate-500 font-medium mb-1">Destination</label>
+              <select id="calc-dest" onchange="calculateBudget()" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 mb-2 text-slate-700 font-medium">
+                <option value="120000" data-name="Singapore & Malaysia">Singapore & Malaysia (₹1,20,000 / pax)</option>
+                <option value="100000" data-name="Bali Tour Package">Bali Tour Package (₹1,00,000 / pax)</option>
+                <option value="105000" data-name="Dubai Tour Package">Dubai Tour Package (₹1,05,000 / pax)</option>
+                <option value="130000" data-name="Vietnam Tour Package">Vietnam Tour Package (₹1,30,000 / pax)</option>
+                <option value="63000" data-name="Bangkok & Pattaya">Bangkok & Pattaya (₹63,000 / pax)</option>
+                <option value="45000" data-name="Kashmir Tour Package">Kashmir Paradise (₹45,000 / pax)</option>
+              </select>
+
+              <!-- Travelers Count -->
+              <div class="grid grid-cols-2 gap-2 mb-2.5">
+                <div>
+                  <label class="block text-[10px] text-slate-500 font-medium">Adults</label>
+                  <input type="number" id="calc-adults" min="1" max="50" value="2" oninput="calculateBudget()" class="w-full text-xs bg-slate-50 border border-slate-200 rounded p-1.5 text-center font-bold text-slate-800" />
+                </div>
+                <div>
+                  <label class="block text-[10px] text-slate-500 font-medium">Seniors (60+)</label>
+                  <input type="number" id="calc-seniors" min="0" max="50" value="0" oninput="calculateBudget()" class="w-full text-xs bg-slate-50 border border-slate-200 rounded p-1.5 text-center font-bold text-emerald-700" />
+                </div>
+              </div>
+
+              <!-- Estimated Total Box -->
+              <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-lg p-2.5 text-center">
+                <span class="block text-[10px] text-emerald-800 font-bold uppercase tracking-wider">Estimated Group Total</span>
+                <span id="calc-total" class="block text-lg font-black text-emerald-900 leading-tight">₹2,40,000</span>
+                <span class="block text-[10px] text-emerald-700 font-medium mt-0.5">✓ Indian Meals • Kannada Manager • Hotels Included</span>
+              </div>
+
+              <button onclick="applyCalculatorToChat()" class="w-full mt-2 bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold py-1.5 rounded-lg transition shadow-xs flex items-center justify-center gap-1">
+                <span>💬 Discuss this Estimate with AI</span>
+              </button>
+            </div>
+
+            <!-- Quick Feature 2: Official Direct WhatsApp Connect -->
+            <div class="bg-white rounded-xl p-3.5 border border-slate-200 shadow-sm text-center">
+              <span class="text-xl block mb-1">📱</span>
+              <h5 class="font-bold text-xs text-slate-900">Direct WhatsApp Assistance</h5>
+              <p class="text-[11px] text-slate-500 my-1">Prefer chatting on WhatsApp with our Kammanahalli tour managers directly?</p>
+              <a
+                id="whatsapp-direct-link"
+                href="https://wa.me/919845370515?text=Namaskara!%20I%20am%20inquiry%20about%20Prakruthi%20Holidays%20tour%20packages."
+                target="_blank"
+                class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg transition shadow-xs mt-1">
+                <span>Open WhatsApp (+91 9845370515)</span>
+              </a>
+            </div>
+
+            <!-- Quick Feature 3: Senior Citizen Care Checklist -->
+            <div class="bg-emerald-900 text-emerald-100 rounded-xl p-3.5 text-xs shadow-sm">
+              <h5 class="font-bold text-white text-xs flex items-center gap-1.5 mb-2">
+                <span>🛡️</span> Our 4-Point Elder Care Pledge
+              </h5>
+              <ul class="space-y-1.5 text-[11px] text-emerald-100">
+                <li class="flex items-start gap-1.5">
+                  <span class="text-amber-400 font-bold">✓</span>
+                  <span><strong>100% Indian Meals</strong>: Homestyle meals in every country.</span>
+                </li>
+                <li class="flex items-start gap-1.5">
+                  <span class="text-amber-400 font-bold">✓</span>
+                  <span><strong>Kannada & English Guides</strong>: Comfort and warmth for parents.</span>
+                </li>
+                <li class="flex items-start gap-1.5">
+                  <span class="text-amber-400 font-bold">✓</span>
+                  <span><strong>Relaxed Pace</strong>: Late starts, no rush, wheelchair assistance.</span>
+                </li>
+                <li class="flex items-start gap-1.5">
+                  <span class="text-amber-400 font-bold">✓</span>
+                  <span><strong>Zero-Stress Logistics</strong>: Visas, flights, and luggage handled.</span>
+                </li>
+              </ul>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- EXPORT / DOWNLOAD POPUP MENU                                  -->
+        <!-- ============================================================= -->
+        <div id="export-menu" class="hidden absolute top-12 right-12 z-50 bg-white rounded-xl shadow-xl border border-slate-200 p-2 text-xs w-48 space-y-1">
+          <button onclick="downloadTranscript()" class="w-full text-left px-2.5 py-1.5 rounded hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 font-medium flex items-center gap-2">
+            <span>📄</span> Download Transcript (.txt)
+          </button>
+          <button onclick="printChat()" class="w-full text-left px-2.5 py-1.5 rounded hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 font-medium flex items-center gap-2">
+            <span>🖨️</span> Print / Save to PDF
+          </button>
+          <button onclick="clearCurrentChat()" class="w-full text-left px-2.5 py-1.5 rounded hover:bg-rose-50 text-rose-600 font-medium flex items-center gap-2 border-t border-slate-100 pt-1.5">
+            <span>🗑️</span> Clear Conversation
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Floating Launcher Button -->
+      <button
+        onclick="toggleChat()"
+        class="pulse-btn bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-3.5 rounded-full shadow-2xl flex items-center gap-2.5 font-bold text-sm border-2 border-white transition transform active:scale-95">
+        <span>💬</span> <span>Plan Your Trip (AI Concierge)</span>
+      </button>
+
+    </div>
+
+    <!-- =============================================================== -->
+    <!-- INTERACTIVE QUICK BOOKING / LEAD CAPTURE MODAL                  -->
+    <!-- =============================================================== -->
+    <div id="quick-booking-modal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div class="bg-gradient-to-r from-emerald-800 to-teal-800 p-4 text-white flex items-center justify-between">
+          <div>
+            <h4 class="font-bold text-sm">📋 Request Complete Itinerary & Dates</h4>
+            <p class="text-[11px] text-emerald-200">Syncs directly to our Kammanahalli tour managers</p>
+          </div>
+          <button onclick="closeQuickBookingModal()" class="text-white/80 hover:text-white text-xl leading-none">&times;</button>
+        </div>
+
+        <form onsubmit="handleManualLeadSubmit(event)" class="p-4 space-y-3 text-xs">
+          <div>
+            <label class="block text-slate-700 font-semibold mb-1">Your Full Name *</label>
+            <input id="modal-name" type="text" required placeholder="e.g. Ramesh Kumar" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 focus:outline-none focus:border-emerald-600" />
+          </div>
+
+          <div>
+            <label class="block text-slate-700 font-semibold mb-1">WhatsApp / Phone Number *</label>
+            <input id="modal-phone" type="tel" required placeholder="e.g. 9845012345" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 focus:outline-none focus:border-emerald-600" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-slate-700 font-semibold mb-1">Destination</label>
+              <select id="modal-dest" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800">
+                <option value="Singapore & Malaysia">Singapore & Malaysia</option>
+                <option value="Bali Tour Package">Bali Tour Package</option>
+                <option value="Dubai Tour Package">Dubai Tour Package</option>
+                <option value="Vietnam Tour Package">Vietnam Tour Package</option>
+                <option value="Bangkok & Pattaya">Bangkok & Pattaya</option>
+                <option value="Kashmir Paradise">Kashmir</option>
+                <option value="Other Custom Trip">Other Destination</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-slate-700 font-semibold mb-1">Travel Month</label>
+              <input id="modal-month" type="text" placeholder="e.g. November 2026" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800" />
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 pt-1">
+            <input id="modal-seniors" type="checkbox" class="w-4 h-4 text-emerald-600 rounded" />
+            <label for="modal-seniors" class="text-slate-700 font-medium">Traveling with Parents or Senior Citizens (60+)</label>
+          </div>
+
+          <div class="pt-2 flex items-center justify-end gap-2">
+            <button type="button" onclick="closeQuickBookingModal()" class="px-3 py-2 text-slate-600 hover:text-slate-800 font-semibold">Cancel</button>
+            <button type="submit" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-2 rounded-lg transition shadow-sm">
+              Send PDF Itinerary via WhatsApp
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ================================================================= -->
+  <!-- FRONTEND LOGIC & ADVANCED CONTROLS                                -->
+  <!-- ================================================================= -->
+  <script>
+    // Session State
+    let SESSION_ID = "prakruthi_demo_" + Math.random().toString(36).substring(2, 9);
+    let isFullscreen = false;
+    let currentMode = "standard";
+    let isRecordingVoice = false;
+    let speechRecognition = null;
+    let messageLog = []; // Stores conversation for export & search
+
+    // DOM Elements
+    const chatWindow = document.getElementById("chat-window");
+    const chatWrapper = document.getElementById("chat-wrapper");
+    const messagesEl = document.getElementById("chat-messages");
+    const inputEl = document.getElementById("chat-input");
+    const quickRepliesEl = document.getElementById("quick-replies");
+    const crmDrawerEl = document.getElementById("crm-drawer");
+    const searchBar = document.getElementById("search-bar");
+    const searchInput = document.getElementById("search-input");
+    const exportMenu = document.getElementById("export-menu");
+    const quickBookingModal = document.getElementById("quick-booking-modal");
+    const fullscreenSidebar = document.getElementById("fullscreen-sidebar");
+    const maxIcon = document.getElementById("max-icon");
+    const restoreIcon = document.getElementById("restore-icon");
+
+    // Configure marked for GFM tables
+    marked.setOptions({
+      gfm: true,
+      breaks: true
+    });
+
+    // 1. Maximize / Full-Screen Toggle
+    function toggleFullscreenChat() {
+      isFullscreen = !isFullscreen;
+
+      if (isFullscreen) {
+        // Switch to Fullscreen Command Center
+        chatWrapper.className = "fixed inset-2 sm:inset-4 md:inset-6 z-50 flex flex-col";
+        chatWindow.className = "bg-white rounded-2xl shadow-2xl border border-slate-300 flex flex-col overflow-hidden w-full h-full";
+        fullscreenSidebar.classList.remove("hidden");
+        maxIcon.classList.add("hidden");
+        restoreIcon.classList.remove("hidden");
+        document.getElementById("maximize-btn").title = "Restore floating window";
+      } else {
+        // Return to Floating Widget Mode
+        chatWrapper.className = "fixed z-50 bottom-5 right-5 flex flex-col items-end";
+        chatWindow.className = "bg-white rounded-2xl shadow-2xl border border-slate-200/90 flex flex-col overflow-hidden transition-all duration-300 mb-3 w-[385px] sm:w-[420px] h-[600px]";
+        fullscreenSidebar.classList.add("hidden");
+        maxIcon.classList.remove("hidden");
+        restoreIcon.classList.add("hidden");
+        document.getElementById("maximize-btn").title = "Maximize / Full Screen Mode";
+      }
+
+      // Preserve scroll position
+      setTimeout(() => {
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }, 100);
+    }
+
+    // Toggle Chat visibility
+    function toggleChat() {
+      chatWindow.classList.toggle("hidden");
+    }
+
+    // Toggle CRM Drawer
+    function toggleCrmDrawer() {
+      crmDrawerEl.classList.toggle("hidden");
+    }
+
+    // Toggle Search Bar
+    function toggleSearchBar() {
+      searchBar.classList.toggle("hidden");
+      if (!searchBar.classList.contains("hidden")) {
+        searchInput.focus();
+      } else {
+        clearSearch();
+      }
+    }
+
+    // Toggle Export Menu
+    function toggleExportMenu() {
+      exportMenu.classList.toggle("hidden");
+    }
+
+    // Set Focus Mode
+    function setFocusMode(mode, btnEl) {
+      currentMode = mode;
+      document.querySelectorAll(".mode-pill").forEach(el => {
+        el.className = "mode-pill shrink-0 px-2 py-0.5 rounded-full text-[10.5px] bg-white text-emerald-900 border border-emerald-200 font-medium hover:bg-emerald-100 transition shadow-xs";
+      });
+      btnEl.className = "mode-pill shrink-0 px-2 py-0.5 rounded-full text-[10.5px] bg-emerald-700 text-white font-medium transition shadow-xs";
+      
+      // Auto-pitch context prompt
+      if (mode === "senior") {
+        sendQuickReply("What makes your tours comfortable for senior citizens?");
+      } else if (mode === "itinerary") {
+        sendQuickReply("Show me the day-by-day itinerary breakdown for Singapore and Malaysia.");
+      } else if (mode === "budget") {
+        sendQuickReply("Can you show a pricing comparison table of all international packages?");
+      }
+    }
+
+    // Quick Book Modal
+    function openQuickBookingModal() {
+      quickBookingModal.classList.remove("hidden");
+    }
+    function closeQuickBookingModal() {
+      quickBookingModal.classList.add("hidden");
+    }
+
+    // Handle Manual Lead Form Submit
+    async function handleManualLeadSubmit(e) {
+      e.preventDefault();
+      const payload = {
+        customer_name: document.getElementById("modal-name").value.trim(),
+        phone_number: document.getElementById("modal-phone").value.trim(),
+        destination: document.getElementById("modal-dest").value,
+        travel_month: document.getElementById("modal-month").value.trim(),
+        includes_seniors: document.getElementById("modal-seniors").checked,
+        notes: "Submitted via Quick Book Modal"
+      };
+
+      try {
+        const res = await fetch("/api/manual-lead", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        closeQuickBookingModal();
+
+        // Toast feedback
+        const toast = document.getElementById("crm-toast");
+        toast.innerHTML = `<span>✅</span> <span>Thank you ${payload.customer_name}! Your itinerary request has been synced!</span>`;
+        toast.classList.remove("hidden");
+        setTimeout(() => toast.classList.add("hidden"), 5000);
+
+        // Add model confirmation message in chat
+        appendMessage("model", `🙏 **Namaskara ${payload.customer_name}!** We have received your request for **${payload.destination}** (${payload.travel_month || 'Flexible'}). Our senior tour manager will WhatsApp the day-by-day PDF itinerary to **${payload.phone_number}** shortly!`);
+        refreshLeadsList();
+      } catch (err) {
+        alert("Could not submit request. Please ensure the backend is running.");
+      }
+    }
+
+    // Interactive Budget Calculator
+    function calculateBudget() {
+      const select = document.getElementById("calc-dest");
+      const pricePerPax = parseInt(select.value, 10) || 100000;
+      const adults = parseInt(document.getElementById("calc-adults").value, 10) || 0;
+      const seniors = parseInt(document.getElementById("calc-seniors").value, 10) || 0;
+      const totalPax = adults + seniors;
+      const totalCost = totalPax * pricePerPax;
+
+      document.getElementById("calc-total").textContent = "₹" + totalCost.toLocaleString("en-IN");
+
+      // Update WhatsApp prefilled link
+      const destName = select.options[select.selectedIndex].getAttribute("data-name");
+      const waText = encodeURIComponent(`Namaskara! I am planning a trip for ${totalPax} travelers (${seniors} seniors) to ${destName}. Estimated budget: ₹${totalCost.toLocaleString("en-IN")}. Please send the PDF itinerary!`);
+      document.getElementById("whatsapp-direct-link").href = `https://wa.me/919845370515?text=${waText}`;
+    }
+
+    function applyCalculatorToChat() {
+      const select = document.getElementById("calc-dest");
+      const destName = select.options[select.selectedIndex].getAttribute("data-name");
+      const adults = document.getElementById("calc-adults").value;
+      const seniors = document.getElementById("calc-seniors").value;
+      const totalCost = document.getElementById("calc-total").textContent;
+
+      const query = `We are planning a trip for ${adults} adults and ${seniors} senior citizens to ${destName} (Estimated around ${totalCost}). What are the fixed departure dates and inclusions?`;
+      sendQuickReply(query);
+    }
+
+    // Search in conversation
+    function handleSearch(query) {
+      const clean = query.trim().toLowerCase();
+      const wrappers = messagesEl.querySelectorAll(".chat-bubble");
+      if (!clean) {
+        wrappers.forEach(w => w.classList.remove("search-match"));
+        return;
+      }
+
+      wrappers.forEach(w => {
+        if (w.textContent.toLowerCase().includes(clean)) {
+          w.classList.add("search-match");
+          w.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        } else {
+          w.classList.remove("search-match");
+        }
+      });
+    }
+
+    function clearSearch() {
+      searchInput.value = "";
+      handleSearch("");
+      searchBar.classList.add("hidden");
+    }
+
+    // Voice Input (Speech-to-Text)
+    function toggleVoiceRecording() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("Speech Recognition is not supported by your browser. Please use Google Chrome or Microsoft Edge.");
+        return;
+      }
+
+      const micBtn = document.getElementById("voice-mic-btn");
+
+      if (isRecordingVoice && speechRecognition) {
+        speechRecognition.stop();
+        isRecordingVoice = false;
+        micBtn.classList.remove("mic-recording", "text-white");
+        micBtn.classList.add("bg-slate-100", "text-slate-600");
+        return;
+      }
+
+      speechRecognition = new SpeechRecognition();
+      speechRecognition.lang = "en-IN"; // Supports English with Indian accent / Kannada phonetics
+      speechRecognition.continuous = false;
+      speechRecognition.interimResults = true;
+
+      speechRecognition.onstart = () => {
+        isRecordingVoice = true;
+        micBtn.classList.add("mic-recording", "text-white");
+        inputEl.placeholder = "Listening... Speak in English or Kannada now";
+      };
+
+      speechRecognition.onresult = (event) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          transcript += event.results[i][0].transcript;
+        }
+        inputEl.value = transcript;
+      };
+
+      speechRecognition.onerror = (event) => {
+        console.warn("Speech error:", event.error);
+        isRecordingVoice = false;
+        micBtn.classList.remove("mic-recording", "text-white");
+        inputEl.placeholder = "Ask in English or Kannada...";
+      };
+
+      speechRecognition.onend = () => {
+        isRecordingVoice = false;
+        micBtn.classList.remove("mic-recording", "text-white");
+        inputEl.placeholder = "Ask in English or Kannada...";
+      };
+
+      speechRecognition.start();
+    }
+
+    // Voice Output (Text-to-Speech)
+    function speakText(text) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel(); // Stop current speech
+
+      // Clean markdown tags for natural speech
+      const clean = text.replace(/[*#_`\[\]]/g, "").replace(/\n/g, " ");
+      const utterance = new SpeechSynthesisUtterance(clean);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // Copy Message to Clipboard
+    function copyMessage(text, btnEl) {
+      navigator.clipboard.writeText(text).then(() => {
+        const originalHtml = btnEl.innerHTML;
+        btnEl.innerHTML = `<span class="text-emerald-700 font-bold">✓ Copied</span>`;
+        setTimeout(() => {
+          btnEl.innerHTML = originalHtml;
+        }, 2000);
+      });
+    }
+
+    // Export & Download Transcript
+    function downloadTranscript() {
+      toggleExportMenu();
+      let text = "====================================================\n";
+      text += "PRAKRUTHI HOLIDAYS - AI CONCIERGE TRAVEL CONSULTATION\n";
+      text += "Bangalore: Kammanahalli Main Road | Phone: +91 9845370515\n";
+      text += "Generated: " + new Date().toLocaleString() + "\n";
+      text += "====================================================\n\n";
+
+      messageLog.forEach(m => {
+        text += `[${m.time}] ${m.role === 'user' ? 'Customer' : 'Prakruthi AI'}:\n`;
+        text += `${m.text}\n\n`;
+      });
+
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `Prakruthi_Holidays_Chat_${new Date().toISOString().slice(0, 10)}.txt`;
+      a.click();
+    }
+
+    // Print / PDF
+    function printChat() {
+      toggleExportMenu();
+      window.print();
+    }
+
+    // Clear Chat
+    async function clearCurrentChat() {
+      toggleExportMenu();
+      if (!confirm("Are you sure you want to clear this conversation?")) return;
+
+      try {
+        await fetch("/api/clear-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_id: SESSION_ID })
+        });
+      } catch (e) {}
+
+      SESSION_ID = "prakruthi_demo_" + Math.random().toString(36).substring(2, 9);
+      messagesEl.innerHTML = "";
+      messageLog = [];
+
+      // Re-add greeting
+      appendMessage("model", `**Namaskara! Welcome back to Prakruthi Holidays** 🙏\n\nHow can we help plan your next comfortable family or senior citizen getaway?`);
+    }
+
+    // Quick Replies & Demo Scenarios
+    function sendQuickReply(text) {
+      inputEl.value = text;
+      handleChatSubmit(new Event("submit"));
+    }
+
+    function runDemoScenario(type) {
+      if (chatWindow.classList.contains("hidden")) {
+        chatWindow.classList.remove("hidden");
+      }
+
+      if (type === "senior") {
+        sendQuickReply("Hi, I want to send my parents (both 66 yrs) on an international group tour in November. Budget around 1.2L each. Do you have Kannada speaking tour managers and Indian food?");
+      } else if (type === "kannada") {
+        sendQuickReply("Namaskara, Dubai mattu Bali package rate eshtu? Senior citizens ge special group tour ideya?");
+      }
+    }
+
+    // Format & Append Messages
+    function appendMessage(role, text) {
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      messageLog.push({ role, text, time: timeStr });
+
+      const wrapper = document.createElement("div");
+
+      if (role === "user") {
+        wrapper.className = "flex justify-end";
+        wrapper.innerHTML = `
+          <div class="chat-bubble bg-emerald-700 text-white rounded-2xl rounded-tr-sm px-4 py-2.5 text-xs max-w-[85%] shadow-sm leading-relaxed">
+            <div>${text}</div>
+            <div class="text-[9.5px] text-emerald-200 text-right mt-1 opacity-80">${timeStr}</div>
+          </div>`;
+      } else {
+        wrapper.className = "flex items-start gap-2.5";
+        
+        // Escape string for onclick handlers
+        const escapedText = text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        
+        wrapper.innerHTML = `
+          <div class="w-8 h-8 rounded-full bg-emerald-700 text-white flex items-center justify-center text-xs shrink-0 mt-0.5 shadow-sm">🌴</div>
+          <div class="chat-bubble bg-white border border-slate-200/90 rounded-2xl rounded-tl-sm p-4 text-xs text-slate-700 shadow-sm max-w-[92%] sm:max-w-[85%] leading-relaxed">
+            <div class="prose">${marked.parse(text)}</div>
+            
+            <!-- Message Action Toolbar -->
+            <div class="flex items-center justify-between border-t border-slate-100 pt-2 mt-2 text-[10px] text-slate-400">
+              <span class="opacity-80">${timeStr} • Prakruthi Concierge</span>
+              
+              <div class="flex items-center gap-2">
+                <!-- Copy Button -->
+                <button
+                  onclick="copyMessage('${escapedText}', this)"
+                  title="Copy response"
+                  class="hover:text-emerald-700 flex items-center gap-1 transition">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                  <span>Copy</span>
+                </button>
+
+                <!-- Text-to-Speech Button -->
+                <button
+                  onclick="speakText('${escapedText}')"
+                  title="Listen to response"
+                  class="hover:text-emerald-700 flex items-center gap-1 transition">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                  <span>Listen</span>
+                </button>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      messagesEl.appendChild(wrapper);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+      const el = document.createElement("div");
+      el.id = "typing-indicator";
+      el.className = "flex items-center gap-2 text-xs text-slate-400 pl-10";
+      el.innerHTML = `
+        <div class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></div>
+        <span class="animate-pulse font-medium text-slate-500">Prakruthi AI is crafting your recommendation...</span>
+      `;
+      messagesEl.appendChild(el);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+      const el = document.getElementById("typing-indicator");
+      if (el) el.remove();
+    }
+
+    function updateTelemetry(leadState, crmSyncedNow, totalLeads) {
+      if (!leadState) return;
+
+      document.getElementById("st-name").textContent = leadState.customer_name || "—";
+      document.getElementById("st-phone").textContent = leadState.phone_number || "—";
+      document.getElementById("st-dest").textContent = leadState.destination_interest || "—";
+      document.getElementById("st-type").textContent = leadState.travel_type || "—";
+      document.getElementById("st-pax").textContent = leadState.pax_count || "—";
+      document.getElementById("st-seniors").textContent = leadState.includes_seniors ? "YES (Priority)" : "No";
+      document.getElementById("st-notes").textContent = leadState.summary_notes || "—";
+
+      const badge = document.getElementById("live-score-badge");
+      const score = (leadState.lead_score || "COLD").toUpperCase();
+      badge.textContent = score;
+
+      badge.className = "text-[10px] px-2 py-0.5 rounded font-bold " + (
+        score.includes("HOT")
+          ? "bg-rose-500/20 text-rose-400 border border-rose-500/40"
+          : score.includes("WARM")
+          ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+          : "bg-slate-800 text-slate-300"
+      );
+
+      document.getElementById("lead-counter").textContent = totalLeads || 0;
+
+      if (crmSyncedNow) {
+        const toast = document.getElementById("crm-toast");
+        toast.classList.remove("hidden");
+        setTimeout(() => toast.classList.add("hidden"), 5000);
+        refreshLeadsList();
+
+        // Slide open the CRM drawer if not already open
+        crmDrawerEl.classList.remove("hidden");
+      }
+    }
+
+    async function refreshLeadsList() {
+      try {
+        const res = await fetch("/api/leads");
+        const data = await res.json();
+        const container = document.getElementById("crm-leads-list");
+        if (!data.leads || data.leads.length === 0) return;
+
+        container.innerHTML = data.leads.map(l => `
+          <div class="bg-slate-950 border border-emerald-500/40 rounded-lg p-3 space-y-1 shadow-sm">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-emerald-400">${l.customer_name} • ${l.phone_number}</span>
+              <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-bold">${l.lead_score}</span>
+            </div>
+            <div class="text-slate-200 font-medium">${l.destination} <span class="text-slate-400 text-[11px]">(${l.travel_type})</span></div>
+            <div class="text-[11px] text-slate-400">Pax: <strong class="text-slate-300">${l.pax_count}</strong> | Budget: <strong class="text-slate-300">${l.budget}</strong> | Seniors: <strong class="text-slate-300">${l.includes_seniors}</strong></div>
+            <div class="text-[11px] text-slate-300 italic border-t border-slate-800/80 pt-1 mt-1 leading-snug">${l.summary_notes}</div>
+          </div>
+        `).join("");
+      } catch (err) {
+        console.warn("Could not refresh leads list:", err);
+      }
+    }
+
+    // Submit Chat
+    async function handleChatSubmit(e) {
+      if (e) e.preventDefault();
+      const text = inputEl.value.trim();
+      if (!text) return;
+
+      inputEl.value = "";
+      appendMessage("user", text);
+      showTypingIndicator();
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: SESSION_ID,
+            message: text,
+            mode: currentMode
+          })
+        });
+
+        const data = await res.json();
+        removeTypingIndicator();
+
+        if (!res.ok) {
+          appendMessage("model", "⚠️ **Alert:** " + (data.detail || "API Error"));
+          return;
+        }
+
+        appendMessage("model", data.reply);
+
+        // Render dynamic quick reply follow-up chips
+        if (data.quick_replies && data.quick_replies.length > 0) {
+          quickRepliesEl.innerHTML = data.quick_replies.map(qr => `
+            <button onclick="sendQuickReply('${qr.replace(/'/g, "\\'")}')" class="shrink-0 text-[11px] bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full font-medium transition shadow-xs flex items-center gap-1">
+              <span>👉</span> ${qr}
+            </button>
+          `).join("");
+        }
+
+        updateTelemetry(data.lead_state, data.crm_synced_now, data.total_leads_captured);
+      } catch (err) {
+        removeTypingIndicator();
+        appendMessage("model", "⚠️ **Connection Error:** Could not connect to the backend microservice. Make sure FastAPI is running on `http://localhost:8000`.");
+      }
+    }
+
+    // Keyboard Shortcuts
+    document.addEventListener("keydown", (e) => {
+      // Escape minimizes/closes
+      if (e.key === "Escape") {
+        if (!quickBookingModal.classList.contains("hidden")) {
+          closeQuickBookingModal();
+        } else if (isFullscreen) {
+          toggleFullscreenChat();
+        }
+      }
+      // Ctrl+F or Cmd+F toggles chat search
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
+        if (!chatWindow.classList.contains("hidden")) {
+          e.preventDefault();
+          toggleSearchBar();
+        }
+      }
+    });
+
+    // Initialize Calculator on load
+    calculateBudget();
+    refreshLeadsList();
+  </script>
+</body>
+</html>

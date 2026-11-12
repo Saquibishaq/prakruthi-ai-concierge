@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="demo-page-title">Executive Pitch Demo – Devlancer AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; background: #09090b; }
+    .prose { font-size: 0.8125rem; line-height: 1.55; color: #18181b; }
+    .prose p { margin-bottom: 0.5rem; }
+    .prose strong { color: #09090b; font-weight: 600; }
+    .prose table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.75rem; border: 1px solid #e4e4e7; border-radius: 0.5rem; overflow: hidden; }
+    .prose th { background: #f4f4f5; color: #18181b; padding: 0.5rem 0.65rem; text-align: left; font-weight: 600; border-bottom: 1px solid #e4e4e7; }
+    .prose td { padding: 0.45rem 0.65rem; border-bottom: 1px solid #f4f4f5; background: white; color: #3f3f46; }
+    .prose tr:nth-child(even) td { background: #fafafa; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 9999px; }
+
+    /* Dark Theme Toggle Styles for Demo Chat Window */
+    #chat-window.dark-theme { background: #09090b !important; border-color: #27272a !important; color: #f4f4f5 !important; }
+    #chat-window.dark-theme #sub-banner { background: #18181b !important; border-color: #27272a !important; color: #a1a1aa !important; }
+    #chat-window.dark-theme #chat-messages { background: #09090b !important; }
+    #chat-window.dark-theme .prose { color: #f4f4f5 !important; background: #18181b !important; border-color: #27272a !important; }
+    #chat-window.dark-theme .prose strong { color: #ffffff !important; }
+    #chat-window.dark-theme .prose p, #chat-window.dark-theme .prose li { color: #d4d4d8 !important; }
+    #chat-window.dark-theme .prose th { background: #27272a !important; color: #f4f4f5 !important; border-color: #3f3f46 !important; }
+    #chat-window.dark-theme .prose td { background: #18181b !important; color: #d4d4d8 !important; border-color: #27272a !important; }
+    #chat-window.dark-theme #quick-replies { background: #121214 !important; border-color: #27272a !important; }
+    #chat-window.dark-theme #quick-replies button { background: #18181b !important; color: #e4e4e7 !important; border-color: #27272a !important; }
+    #chat-window.dark-theme #quick-replies button:hover { background: #27272a !important; color: #ffffff !important; }
+    #chat-window.dark-theme form { background: #121214 !important; border-color: #27272a !important; }
+    #chat-window.dark-theme #chat-input { background: #18181b !important; border-color: #27272a !important; color: #ffffff !important; }
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-col antialiased selection:bg-zinc-800 selection:text-white">
+
+  <!-- ================================================================= -->
+  <!-- MINIMALIST PRESENTER CONTROL BAR                                 -->
+  <!-- ================================================================= -->
+  <header id="presenter-bar" class="h-12 bg-zinc-950 border-b border-zinc-800/80 px-4 flex items-center justify-between text-xs text-zinc-300 z-50 shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span class="font-medium text-zinc-200 tracking-tight text-xs">Live Pitch Presenter</span>
+      </div>
+      
+      <span class="text-zinc-600">/</span>
+
+      <!-- Multi-Tenant Agency Switcher Dropdown -->
+      <div class="flex items-center gap-1.5 bg-zinc-900 px-2.5 py-1 rounded-lg border border-zinc-800">
+        <span class="text-zinc-500 text-[11px]">Client</span>
+        <select id="tenant-switcher" onchange="switchClientPitch(this.value)" class="bg-transparent font-medium text-zinc-100 focus:outline-none cursor-pointer text-xs"></select>
+      </div>
+
+      <!-- Universal Website Simulator -->
+      <form id="url-test-form" onsubmit="loadCustomUrl(event)" class="hidden xl:flex items-center gap-1.5 bg-zinc-900 px-2 py-0.5 rounded-lg border border-zinc-800">
+        <span class="text-zinc-500 text-[10px] uppercase font-semibold">Test Any Site</span>
+        <input id="custom-url-input" type="text" placeholder="e.g. cricbuzz.com" class="bg-transparent text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none w-40 font-mono" />
+        <button type="submit" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition">Simulate</button>
+      </form>
+
+      <a href="/admin" class="text-zinc-500 hover:text-zinc-300 text-[11px] font-medium hidden md:flex items-center gap-1 transition">
+        <span>Admin Console</span>
+        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+      </a>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button onclick="runScenario('sample')" class="h-7 px-2.5 rounded-lg text-[11px] font-medium text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 transition flex items-center gap-1.5">
+        <svg class="w-3 h-3 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+        <span>Test Inquiry</span>
+      </button>
+
+      <button onclick="toggleCrmDrawer()" class="h-7 px-3 rounded-lg text-[11px] font-medium text-zinc-200 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 transition flex items-center gap-1.5 shadow-xs">
+        <svg class="w-3 h-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+        <span>Live CRM</span>
+        <span class="text-[10px] font-mono px-1 py-0.2 rounded bg-zinc-800 text-zinc-300 ml-0.5" id="lead-counter">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ================================================================= -->
+  <!-- MAIN VIEWPORT: Live Website Background + Slide-Over CRM Drawer    -->
+  <!-- ================================================================= -->
+  <main class="relative flex-1 w-full overflow-hidden flex">
+    <!-- Live Client Website Background -->
+    <div class="flex-1 h-full relative bg-zinc-950">
+      <iframe
+        id="client-website-frame"
+        src="about:blank"
+        class="w-full h-full border-0"
+        title="Live Client Website"
+        loading="lazy">
+      </iframe>
+    </div>
+
+    <!-- Slide-over CRM Drawer -->
+    <aside id="crm-drawer" class="w-[360px] sm:w-[400px] bg-zinc-950 border-l border-zinc-800/90 text-zinc-100 h-full flex flex-col transition-all duration-300 hidden z-40 shadow-2xl">
+      <div class="p-4 border-b border-zinc-800/80 flex items-center justify-between bg-zinc-950">
+        <div>
+          <h3 class="font-medium text-xs text-zinc-100 tracking-tight">Real-Time Lead Extraction</h3>
+          <p class="text-[11px] text-zinc-400 mt-0.5">Automated entity parsing via Gemini 3.5 structured output</p>
+        </div>
+        <button onclick="toggleCrmDrawer()" class="w-6 h-6 rounded-md text-zinc-400 hover:text-white flex items-center justify-center text-sm">&times;</button>
+      </div>
+
+      <!-- Current Conversation Live Extraction State -->
+      <div class="p-4 border-b border-zinc-800/80 bg-zinc-900/30">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[10px] uppercase tracking-wider font-semibold text-zinc-400">Current Session State</span>
+          <span id="live-score-badge" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">COLD</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-xs bg-zinc-900/80 p-3 rounded-lg border border-zinc-800 font-mono text-[11px]">
+          <div><span class="text-zinc-500 block text-[9px] uppercase font-sans">Name</span><span id="st-name" class="font-medium text-zinc-200">—</span></div>
+          <div><span class="text-zinc-500 block text-[9px] uppercase font-sans">Phone</span><span id="st-phone" class="font-medium text-emerald-400">—</span></div>
+          <div><span class="text-zinc-500 block text-[9px] uppercase font-sans">Destination</span><span id="st-dest" class="text-zinc-300">—</span></div>
+          <div><span class="text-zinc-500 block text-[9px] uppercase font-sans">Type</span><span id="st-type" class="text-zinc-300">—</span></div>
+          <div><span class="text-zinc-500 block text-[9px] uppercase font-sans">Travelers</span><span id="st-pax" class="text-zinc-300">—</span></div>
+          <div><span class="text-zinc-500 block text-[9px] uppercase font-sans">Seniors</span><span id="st-seniors" class="text-zinc-300">No</span></div>
+          <div class="col-span-2 pt-1 border-t border-zinc-800"><span class="text-zinc-500 block text-[9px] uppercase font-sans">Summary Notes</span><span id="st-notes" class="text-zinc-400 font-sans text-[11px] block mt-0.5">Waiting for visitor inquiry...</span></div>
+        </div>
+      </div>
+
+      <!-- Captured CRM Rows Log -->
+      <div class="flex-1 p-4 overflow-y-auto">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-[10px] uppercase tracking-wider font-semibold text-zinc-400">Saved Lead Records</span>
+          <span class="text-[10px] text-zinc-500">Auto-triggers on Phone</span>
+        </div>
+        <div id="crm-leads-list" class="space-y-2 text-xs">
+          <div class="text-center py-8 text-zinc-500 border border-dashed border-zinc-800 rounded-lg p-4 text-[11px]">
+            No leads captured for this agency yet.<br/>
+            <span class="text-zinc-400 font-medium">Type a phone number in the chat to watch it sync.</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Floating Chatbot Widget Wrapper -->
+    <div id="chat-wrapper" class="fixed z-50 bottom-6 right-6 flex flex-col items-end">
+      
+      <!-- Main Window -->
+      <div id="chat-window" class="bg-white rounded-2xl shadow-2xl border border-zinc-200/90 flex flex-col overflow-hidden transition-all duration-300 mb-3 w-[380px] sm:w-[410px] h-[610px]">
+        
+        <!-- Header -->
+        <div class="p-3.5 bg-zinc-950 text-white flex items-center justify-between border-b border-zinc-800 shrink-0">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <button onclick="toggleMaximize()" title="Maximize / Restore" class="w-7 h-7 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white flex items-center justify-center transition border border-zinc-800 shrink-0">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+            </button>
+            <div class="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden" id="header-avatar-badge">
+              AI
+            </div>
+            <div class="min-w-0">
+              <h4 id="widget-title" class="font-medium text-xs text-zinc-100 truncate">Travel Concierge AI</h4>
+              <p class="text-[10px] text-zinc-400 flex items-center gap-1 mt-0.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span id="widget-langs">English & Hindi</span>
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button onclick="toggleDemoTheme()" id="demo-theme-btn" title="Toggle Light / Dark Mode" class="w-7 h-7 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white flex items-center justify-center transition border border-zinc-800 shrink-0">
+              <svg id="demo-theme-icon" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+            <button onclick="toggleChat()" class="w-7 h-7 rounded-md text-zinc-400 hover:text-white flex items-center justify-center text-base leading-none">&times;</button>
+          </div>
+        </div>
+
+        <!-- Sub-banner -->
+        <div id="sub-banner" class="bg-zinc-50 border-b border-zinc-100 px-3 py-1.5 text-[10.5px] text-zinc-500 flex items-center justify-between font-medium shrink-0">
+          <span id="sub-feat-1">Live Updates</span>
+          <span id="sub-feat-2">Instant Answers</span>
+          <span id="sub-feat-3">24/7 Support</span>
+        </div>
+
+        <!-- Messages Feed -->
+        <div id="chat-messages" class="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3.5 bg-zinc-50/50"></div>
+
+        <!-- Toast Alert -->
+        <div id="crm-toast" class="hidden bg-emerald-600 text-white text-[11px] px-3.5 py-1.5 font-medium text-center shadow-xs">
+          Lead Captured & Synced to CRM
+        </div>
+
+        <!-- Quick Replies -->
+        <div id="quick-replies" class="px-3.5 py-2 bg-white border-t border-zinc-100 flex gap-1.5 overflow-x-auto no-scrollbar shrink-0"></div>
+
+        <!-- Composer -->
+        <form onsubmit="handleChatSubmit(event)" class="p-3 bg-white border-t border-zinc-100 flex items-center gap-2 shrink-0">
+          <input
+            id="chat-input"
+            type="text"
+            placeholder="Type your question..."
+            class="flex-1 text-xs bg-zinc-50 border border-zinc-200 rounded-lg px-3.5 py-2 focus:outline-none focus:border-zinc-700 focus:bg-white text-zinc-800 transition"
+            autocomplete="off"
+          />
+          <button type="submit" class="bg-zinc-950 hover:bg-zinc-800 text-white rounded-lg px-3.5 py-2 text-xs font-medium transition shrink-0 flex items-center gap-1">
+            <span>Send</span>
+          </button>
+        </form>
+
+      </div>
+
+      <!-- Floating Launcher Button -->
+      <button
+        onclick="toggleChat()"
+        class="h-10 px-3.5 rounded-full bg-zinc-950 hover:bg-zinc-900 text-white border border-zinc-800 shadow-xl flex items-center gap-2 font-medium text-xs transition">
+        <span id="launcher-avatar-container" class="w-5 h-5 rounded bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        </span>
+        <span id="launcher-label">Chat with Assistant</span>
+      </button>
+
+    </div>
+  </main>
+
+  <script>
+    let slug = window.location.pathname.split("/").pop() || "many2go-holidays";
+    let SESSION_ID = "demo_" + Math.random().toString(36).substring(2, 9);
+    let tenant = null;
+    let allTenants = [];
+    let isMax = false;
+    let clientHistory = [];
+
+    const messagesEl = document.getElementById("chat-messages");
+    const inputEl = document.getElementById("chat-input");
+    const quickRepliesEl = document.getElementById("quick-replies");
+    const crmDrawerEl = document.getElementById("crm-drawer");
+    const chatWindow = document.getElementById("chat-window");
+    const chatWrapper = document.getElementById("chat-wrapper");
+
+    marked.setOptions({ gfm: true, breaks: true });
+
+    async function initPitchView() {
+      // 1. Load all tenants for the top switcher
+      try {
+        const tListRes = await fetch("/api/tenants");
+        allTenants = await tListRes.json();
+        
+        const switcher = document.getElementById("tenant-switcher");
+        switcher.innerHTML = allTenants.map(t => `
+          <option value="${t.slug}" ${t.slug === slug ? 'selected' : ''}>${t.name}</option>
+        `).join("");
+      } catch (e) {}
+
+      // 2. Load current tenant details
+      try {
+        const res = await fetch(`/api/tenants/${slug}`);
+        const data = await res.json();
+        tenant = data.tenant;
+        const packages = data.packages || [];
+        const cat = (tenant.category || 'general').toLowerCase();
+
+        // Apply theme & website (via proxy to bypass iframe X-Frame-Options blocking)
+        document.getElementById("demo-page-title").textContent = `${tenant.name} • Devlancer Demo`;
+        const websiteUrl = tenant.website_url || (tenant.domain ? ('https://' + tenant.domain) : '');
+        document.getElementById("client-website-frame").src = websiteUrl ? (`/api/preview?embed=1&url=${encodeURIComponent(websiteUrl)}`) : "about:blank";
+        document.getElementById("widget-title").textContent = tenant.assistant_name || `${tenant.name} AI`;
+        document.getElementById("widget-langs").textContent = tenant.supported_languages || "Online";
+        document.getElementById("launcher-label").textContent = `Chat with ${tenant.name}`;
+
+        // Dynamic domain-aware sub-banner features
+        const subFeats = {
+          entertainment_movies: ["Top Rated Movies", "Cast & Trivia", "IMDb Scores"],
+          movies: ["Top Rated Movies", "Cast & Trivia", "IMDb Scores"],
+          sports_cricket: ["Live Ball-by-Ball", "Match Highlights", "Stats & Fixtures"],
+          sports: ["Live Scores", "Schedules & Standings", "Player Stats"],
+          ecommerce: ["Product Finder", "Order Tracking", "Instant Support"],
+          saas: ["Feature Guidance", "API & Docs", "24/7 Support"],
+          travel: ["Curated Itineraries", "Verified Pricing", "24/7 Support"],
+          general: ["Instant Answers", "Official AI", "24/7 Concierge"]
+        };
+        let feats = subFeats.general;
+        if (cat.includes('movie') || cat.includes('film') || cat.includes('cinema') || cat.includes('entertain')) {
+          feats = subFeats.entertainment_movies;
+        } else if (cat.includes('cricket')) {
+          feats = subFeats.sports_cricket;
+        } else if (cat.includes('sport')) {
+          feats = subFeats.sports;
+        } else if (cat.includes('shop') || cat.includes('ecom') || cat.includes('store')) {
+          feats = subFeats.ecommerce;
+        } else if (cat.includes('saas') || cat.includes('tech') || cat.includes('soft')) {
+          feats = subFeats.saas;
+        } else if (cat === 'travel') {
+          feats = subFeats.travel;
+        }
+
+        if (document.getElementById("sub-feat-1")) document.getElementById("sub-feat-1").textContent = feats[0];
+        if (document.getElementById("sub-feat-2")) document.getElementById("sub-feat-2").textContent = feats[1];
+        if (document.getElementById("sub-feat-3")) document.getElementById("sub-feat-3").textContent = feats[2];
+
+        // Dynamic input placeholder
+        let ph = `Ask anything about ${tenant.name}...`;
+        if (cat.includes('movie') || cat.includes('film') || cat.includes('cinema') || cat.includes('entertain')) {
+          ph = "Ask about movie ratings, top 10 lists, cast, reviews...";
+        } else if (cat.includes('cricket')) {
+          ph = "Ask about live scores, match schedules, player stats...";
+        } else if (cat.includes('sport')) {
+          ph = "Ask about matches, scores, schedules, or players...";
+        } else if (cat.includes('shop') || cat.includes('ecom') || cat.includes('store')) {
+          ph = "Ask about products, sizes, prices, or orders...";
+        } else if (cat === 'travel') {
+          ph = "Ask about packages, prices, or itineraries...";
+        }
+        document.getElementById("chat-input").placeholder = ph;
+        
+        const logoUrl = (tenant.logo_url || '').trim() || (tenant.website_url ? `https://www.google.com/s2/favicons?domain=${tenant.website_url.replace(/^https?:\/\//i, '').split('/')[0]}&sz=128` : '');
+        const initials = (tenant.name || 'AI').slice(0, 2).toUpperCase();
+        const headerBadge = document.getElementById("header-avatar-badge");
+        if (logoUrl) {
+          headerBadge.innerHTML = `
+            <img src="${logoUrl}" alt="${tenant.name}" class="w-full h-full object-contain p-0.5 rounded-lg bg-white" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <span style="display:none;" class="w-full h-full flex items-center justify-center text-xs font-semibold text-zinc-100">${initials}</span>
+          `;
+          const launcherAvatar = document.getElementById("launcher-avatar-container");
+          if (launcherAvatar) {
+            launcherAvatar.innerHTML = `
+              <img src="${logoUrl}" alt="" class="w-full h-full object-contain p-0.5" onerror="this.parentElement.innerHTML='<span class=\\'w-2 h-2 rounded-full bg-emerald-400\\'></span>';" />
+            `;
+          }
+        } else {
+          headerBadge.textContent = initials;
+        }
+
+        // Initial Greeting
+        messagesEl.innerHTML = "";
+        const fallbackGreeting = cat === 'travel' 
+          ? `Hello! Welcome to **${tenant.name}**. How can we help you plan your next trip?`
+          : (cat.includes('cricket') || cat.includes('sport')
+              ? `Welcome to **${tenant.name}**! How can I help you follow the game today? 🏏`
+              : `Hello! Welcome to **${tenant.name}**. How can I help you today?`);
+        appendMessage("model", tenant.welcome_message || fallbackGreeting);
+
+        // Quick Replies: Prioritize intelligent starter_prompts saved in DB
+        let prompts = [];
+        if (tenant.starter_prompts) {
+          try {
+            prompts = typeof tenant.starter_prompts === 'string' ? JSON.parse(tenant.starter_prompts) : tenant.starter_prompts;
+          } catch (e) {
+            prompts = [];
+          }
+        }
+        if (!prompts || prompts.length === 0) {
+          if (packages.length > 0) {
+            prompts = packages.slice(0, 3).map(p => p.name);
+          } else if (cat.includes('cricket')) {
+            prompts = ["Live Cricket Scores", "Upcoming Fixtures", "Recent Match Results"];
+          } else if (cat.includes('sport')) {
+            prompts = ["Live Scores", "Schedule", "Top Teams"];
+          } else if (cat === 'travel') {
+            prompts = ["Holiday Packages", "Fixed Departures", "Pricing Comparison"];
+          } else {
+            prompts = ["Overview", "Top Offerings", "Contact Support"];
+          }
+        }
+        quickRepliesEl.innerHTML = prompts.map(qr => `
+          <button onclick="sendQuickReply('${qr.replace(/'/g, "\\'")}')" class="shrink-0 text-[11px] bg-zinc-50 hover:bg-zinc-100 text-zinc-700 border border-zinc-200 px-3 py-1 rounded-full font-medium transition shadow-2xs">
+            ${qr}
+          </button>
+        `).join("");
+
+        refreshLeadsList();
+      } catch (err) {
+        console.error("Error loading tenant:", err);
+      }
+    }
+
+    function switchClientPitch(newSlug) {
+      window.location.href = `/demo/${newSlug}`;
+    }
+
+    function loadCustomUrl(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById("custom-url-input");
+      let url = input ? input.value.trim() : "";
+      if (!url) return;
+      if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        url = "https://" + url;
+      }
+      window.location.href = `/demo/preview?url=${encodeURIComponent(url)}`;
+    }
+
+    function toggleChat() {
+      chatWindow.classList.toggle("hidden");
+    }
+
+    function toggleCrmDrawer() {
+      crmDrawerEl.classList.toggle("hidden");
+    }
+
+    let demoTheme = 'light';
+    try {
+      demoTheme = localStorage.getItem('demo_chat_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    } catch(e) {}
+
+    function setDemoTheme(t) {
+      demoTheme = t;
+      const cw = document.getElementById("chat-window");
+      const icon = document.getElementById("demo-theme-icon");
+      if (!cw) return;
+      if (t === 'dark') {
+        cw.classList.add("dark-theme");
+        if (icon) icon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+      } else {
+        cw.classList.remove("dark-theme");
+        if (icon) icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+      }
+      try { localStorage.setItem('demo_chat_theme', t); } catch(e) {}
+    }
+
+    function toggleDemoTheme() {
+      setDemoTheme(demoTheme === 'dark' ? 'light' : 'dark');
+    }
+
+    // Apply initial theme on load
+    setTimeout(() => setDemoTheme(demoTheme), 50);
+
+    function toggleMaximize() {
+      isMax = !isMax;
+      if (isMax) {
+        chatWrapper.className = "fixed inset-3 md:inset-6 z-50 flex flex-col";
+        chatWindow.className = "bg-white rounded-2xl shadow-2xl border border-zinc-300 flex flex-col overflow-hidden w-full h-full";
+      } else {
+        chatWrapper.className = "fixed z-50 bottom-6 right-6 flex flex-col items-end";
+        chatWindow.className = "bg-white rounded-2xl shadow-2xl border border-zinc-200/90 flex flex-col overflow-hidden transition-all duration-300 mb-3 w-[380px] sm:w-[410px] h-[610px]";
+      }
+      setTimeout(() => messagesEl.scrollTop = messagesEl.scrollHeight, 100);
+    }
+
+    function runScenario(type) {
+      if (chatWindow.classList.contains("hidden")) chatWindow.classList.remove("hidden");
+      const cat = (tenant && tenant.category ? tenant.category : 'general').toLowerCase();
+      if (cat.includes('cricket')) {
+        sendQuickReply("What are the live cricket scores and upcoming match highlights?");
+      } else if (cat.includes('sport')) {
+        sendQuickReply("What are the latest scores and upcoming fixtures?");
+      } else if (cat === 'ecommerce') {
+        sendQuickReply("What are your best-selling products and pricing?");
+      } else if (cat === 'travel') {
+        sendQuickReply("Hello! Can you compare your top holiday packages with prices in a table?");
+      } else {
+        sendQuickReply(`Hello! Can you give me an overview of what ${tenant ? tenant.name : 'your platform'} offers?`);
+      }
+    }
+
+    function sendQuickReply(text) {
+      inputEl.value = text;
+      handleChatSubmit(new Event("submit"));
+    }
+
+    function appendMessage(role, text, components = null) {
+      const wrap = document.createElement("div");
+      if (role === "user") {
+        wrap.className = "flex justify-end";
+        wrap.innerHTML = `<div class="bg-zinc-950 text-white rounded-xl rounded-tr-xs px-3.5 py-2 text-xs max-w-[85%] leading-relaxed">${text}</div>`;
+      } else {
+        wrap.className = "flex items-start gap-2.5";
+        let extraHtml = "";
+
+        if (components) {
+          // Summary
+          if (components.summary) {
+            extraHtml += `<div class="bg-zinc-100 border-l-2 border-zinc-900 p-2 text-[11px] font-medium text-zinc-800 rounded-r mb-2.5">${components.summary}</div>`;
+          }
+
+          // Cards
+          if (components.cards && components.cards.length > 0) {
+            extraHtml += `
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 my-2.5">
+                ${components.cards.map(c => `
+                  <div class="bg-zinc-50 border border-zinc-200 rounded-lg p-2.5 flex flex-col justify-between">
+                    <div>
+                      ${c.badge ? `<span class="text-[9px] font-semibold bg-zinc-200 text-zinc-700 px-1.5 py-0.5 rounded uppercase tracking-wider">${c.badge}</span>` : ''}
+                      <div class="font-semibold text-xs text-zinc-900 mt-1">${c.title}</div>
+                      ${c.duration ? `<div class="text-[10px] text-zinc-500">${c.duration}</div>` : ''}
+                      ${c.price ? `<div class="text-xs font-bold text-zinc-950 mt-1">${c.price}</div>` : ''}
+                      ${c.highlights && c.highlights.length > 0 ? `
+                        <ul class="text-[10.5px] text-zinc-600 mt-1.5 space-y-0.5 list-disc pl-3">
+                          ${c.highlights.map(h => `<li>${h}</li>`).join('')}
+                        </ul>` : ''}
+                    </div>
+                    <button onclick="sendQuickReply('Tell me more about ${c.title.replace(/'/g, "\\'")}')" class="mt-2 text-[10.5px] bg-zinc-900 hover:bg-zinc-800 text-white py-1 px-2 rounded font-medium transition text-center">
+                      ${c.actions && c.actions.length > 0 && c.actions[0].label ? c.actions[0].label : 'Explore'}
+                    </button>
+                  </div>
+                `).join('')}
+              </div>
+            `;
+          }
+
+          // Comparison Table
+          if (components.comparison_table) {
+            const ct = components.comparison_table;
+            extraHtml += `
+              <div class="overflow-x-auto my-2.5 border border-zinc-200 rounded-lg">
+                <table class="w-full text-left text-[11px]">
+                  <thead class="bg-zinc-100 text-zinc-700 font-semibold border-b border-zinc-200">
+                    <tr>${(ct.headers || []).map(h => `<th class="p-2">${h}</th>`).join('')}</tr>
+                  </thead>
+                  <tbody class="divide-y divide-zinc-200 text-zinc-600">
+                    ${(ct.rows || []).map(r => {
+                      const cells = Array.isArray(r) ? r : (r && r.cells ? r.cells : []);
+                      return `<tr>${cells.map(c => `<td class="p-2">${c}</td>`).join('')}</tr>`;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `;
+          }
+
+          // Itinerary
+          if (components.itinerary && components.itinerary.length > 0) {
+            extraHtml += `
+              <div class="border-l-2 border-zinc-300 ml-2 pl-3 space-y-2 my-2.5">
+                ${components.itinerary.map(d => `
+                  <div>
+                    <div class="font-semibold text-xs text-zinc-950">Day ${d.day_number}: ${d.title}</div>
+                    ${d.morning ? `<div class="text-[11px] text-zinc-600"><strong>Morning:</strong> ${d.morning}</div>` : ''}
+                    ${d.afternoon ? `<div class="text-[11px] text-zinc-600"><strong>Afternoon:</strong> ${d.afternoon}</div>` : ''}
+                    ${d.evening ? `<div class="text-[11px] text-zinc-600"><strong>Evening:</strong> ${d.evening}</div>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            `;
+          }
+
+          // Follow-up chips
+          if (components.follow_up) {
+            const f = components.follow_up;
+            extraHtml += `
+              <div class="bg-purple-50 border border-purple-200 rounded-lg p-2.5 my-2">
+                <div class="text-xs font-semibold text-purple-900 mb-1.5">${f.question}</div>
+                <div class="flex flex-wrap gap-1.5">
+                  ${(f.chips || []).map(chip => `
+                    <button onclick="sendQuickReply('${chip.replace(/'/g, "\\'")}')" class="text-[10.5px] bg-white border border-purple-300 text-purple-800 hover:bg-purple-100 px-2.5 py-0.5 rounded-full font-medium transition">
+                      ${chip}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+            `;
+          }
+        }
+
+        const botLogoUrl = (tenant && tenant.logo_url) ? tenant.logo_url : '';
+        const botInitials = (tenant && tenant.name ? tenant.name : 'AI').slice(0, 2).toUpperCase();
+        const botAvatarHtml = botLogoUrl ? `
+          <div class="w-6 h-6 rounded-md bg-white border border-zinc-200 flex items-center justify-center shrink-0 mt-0.5 overflow-hidden p-0.5 shadow-2xs">
+            <img src="${botLogoUrl}" alt="" class="w-full h-full object-contain" onerror="this.parentElement.className='w-6 h-6 rounded-md bg-zinc-900 text-zinc-300 border border-zinc-800 flex items-center justify-center text-[10px] font-semibold shrink-0 mt-0.5'; this.parentElement.innerHTML='${botInitials}';" />
+          </div>
+        ` : `
+          <div class="w-6 h-6 rounded-md bg-zinc-900 text-zinc-300 border border-zinc-800 flex items-center justify-center text-[10px] font-semibold shrink-0 mt-0.5">${botInitials}</div>
+        `;
+
+        wrap.innerHTML = `
+          ${botAvatarHtml}
+          <div class="prose bg-white border border-zinc-200 rounded-xl rounded-tl-xs p-3.5 text-xs text-zinc-800 shadow-2xs max-w-[90%] leading-relaxed">
+            ${marked.parse(text)}
+            ${extraHtml}
+          </div>
+        `;
+      }
+      messagesEl.appendChild(wrap);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    async function handleChatSubmit(e) {
+      if (e) e.preventDefault();
+      const text = inputEl.value.trim();
+      if (!text) return;
+
+      inputEl.value = "";
+      appendMessage("user", text);
+
+      // Typing indicator
+      const typingEl = document.createElement("div");
+      typingEl.id = "typing-box";
+      typingEl.className = "text-xs text-zinc-400 pl-8 italic";
+      const cat = (tenant && tenant.category ? tenant.category : 'general').toLowerCase();
+      const qLower = text.toLowerCase();
+      let actionText = "thinking...";
+      if (cat.includes('movie') || cat.includes('film') || cat.includes('cinema') || cat.includes('entertain') || qLower.includes('movie') || qLower.includes('film') || qLower.includes('actor') || qLower.includes('rating')) {
+        actionText = "looking up movie ratings & details...";
+      } else if (cat.includes('cricket') || qLower.includes('cricket') || qLower.includes('match') || qLower.includes('score')) {
+        actionText = "fetching latest match updates...";
+      } else if (cat.includes('sport') || qLower.includes('game') || qLower.includes('fixture')) {
+        actionText = "checking sports scores...";
+      } else if (cat.includes('shop') || cat.includes('ecom') || cat.includes('store') || qLower.includes('shoe') || qLower.includes('product')) {
+        actionText = "finding best options...";
+      } else if (cat === 'travel' || qLower.includes('itinerary') || qLower.includes('tour') || qLower.includes('trip')) {
+        actionText = "checking itineraries...";
+      } else {
+        actionText = "finding the best answers...";
+      }
+      typingEl.textContent = `${tenant ? (tenant.assistant_name || tenant.name) : 'Assistant'} is ${actionText}`;
+      messagesEl.appendChild(typingEl);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+      try {
+        const recentHistory = clientHistory.slice(-4);
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tenant_slug: slug,
+            session_id: SESSION_ID,
+            message: text,
+            history: recentHistory
+          })
+        });
+
+        const data = await res.json();
+        const t = document.getElementById("typing-box");
+        if (t) t.remove();
+
+        if (!res.ok) {
+          appendMessage("model", `Notice: ${data.detail || 'Service unavailable'}`);
+          return;
+        }
+
+        // Client-side in-memory history (Stateless - Never saved to DB)
+        clientHistory.push({ role: "user", text: text });
+        clientHistory.push({ role: "model", text: data.reply || data.reply_message || "" });
+        if (clientHistory.length > 8) clientHistory = clientHistory.slice(-8);
+
+        appendMessage("model", data.reply, data.components);
+
+        if (data.quick_replies && data.quick_replies.length > 0) {
+          quickRepliesEl.innerHTML = data.quick_replies.map(qr => `
+            <button onclick="sendQuickReply('${qr.replace(/'/g, "\\'")}')" class="shrink-0 text-[11px] bg-zinc-50 hover:bg-zinc-100 text-zinc-700 border border-zinc-200 px-3 py-1 rounded-full font-medium transition shadow-2xs">
+              ${qr}
+            </button>
+          `).join("");
+        }
+
+        updateTelemetry(data.lead_state, data.crm_synced_now, data.total_leads_captured);
+      } catch (err) {
+        const t = document.getElementById("typing-box");
+        if (t) t.remove();
+        appendMessage("model", "Connection error. Please verify the backend is running.");
+      }
+    }
+
+    function updateTelemetry(leadState, crmSyncedNow, totalLeads) {
+      if (!leadState) return;
+      document.getElementById("st-name").textContent = leadState.customer_name || "—";
+      document.getElementById("st-phone").textContent = leadState.phone_number || "—";
+      document.getElementById("st-dest").textContent = leadState.destination_interest || "—";
+      document.getElementById("st-type").textContent = leadState.travel_type || "—";
+      document.getElementById("st-pax").textContent = leadState.pax_count || "—";
+      document.getElementById("st-seniors").textContent = leadState.includes_seniors ? "Yes" : "No";
+      document.getElementById("st-notes").textContent = leadState.summary_notes || "—";
+
+      const badge = document.getElementById("live-score-badge");
+      const score = (leadState.lead_score || "COLD").toUpperCase();
+      badge.textContent = score.replace('🔥', '').trim();
+      badge.className = "text-[10px] font-mono px-1.5 py-0.5 rounded font-semibold " + (
+        score.includes("HOT") ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" :
+        score.includes("WARM") ? "bg-amber-500/10 text-amber-300 border border-amber-500/20" : "bg-zinc-800 text-zinc-400"
+      );
+
+      document.getElementById("lead-counter").textContent = totalLeads || 0;
+
+      if (crmSyncedNow) {
+        const toast = document.getElementById("crm-toast");
+        toast.classList.remove("hidden");
+        setTimeout(() => toast.classList.add("hidden"), 4000);
+        refreshLeadsList();
+        crmDrawerEl.classList.remove("hidden");
+      }
+    }
+
+    async function refreshLeadsList() {
+      try {
+        const res = await fetch(`/api/leads?tenant_slug=${slug}`);
+        const data = await res.json();
+        const container = document.getElementById("crm-leads-list");
+        if (!data.leads || data.leads.length === 0) return;
+
+        container.innerHTML = data.leads.map(l => `
+          <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-3 space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="font-medium text-zinc-200 text-xs">${l.customer_name} • ${l.phone_number}</span>
+              <span class="text-[10px] font-mono px-1.5 py-0.5 rounded ${l.lead_score.includes('HOT') ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-zinc-800 text-zinc-400'}">${l.lead_score.replace('🔥', '').trim()}</span>
+            </div>
+            <div class="text-zinc-300 text-xs">${l.destination} <span class="text-zinc-500 text-[10px]">(${l.travel_type})</span></div>
+            <div class="text-[11px] text-zinc-400 font-mono">Pax: ${l.pax_count} • Budget: ${l.budget}</div>
+            <div class="text-[11px] text-zinc-400 italic border-t border-zinc-800/80 pt-1 mt-1 leading-snug">${l.summary_notes}</div>
+          </div>
+        `).join("");
+      } catch (err) {}
+    }
+
+    initPitchView();
+  </script>
+</body>
+</html>

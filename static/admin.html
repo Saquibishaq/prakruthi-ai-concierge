@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Devlancer AI – Multi-Tenant Chatbot Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
+          },
+          colors: {
+            brand: {
+              50: '#f4f4f5',
+              900: '#18181b',
+              950: '#09090b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #09090b;
+      color: #fafafa;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+    .card-surface {
+      background: #111113;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .card-surface:hover {
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-zinc-800 selection:text-white">
+
+  <!-- Minimalist Executive Navigation -->
+  <header class="h-14 border-b border-zinc-800/80 bg-zinc-950/70 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-40">
+    <div class="flex items-center gap-3">
+      <!-- Minimalist Monogram Mark -->
+      <div class="w-7 h-7 rounded-lg bg-zinc-100 flex items-center justify-center font-semibold text-xs text-zinc-950 shadow-xs tracking-tighter">
+        D
+      </div>
+      <div class="flex items-baseline gap-2.5">
+        <span class="font-semibold text-sm text-zinc-100 tracking-tight">Devlancer</span>
+        <span class="text-zinc-500 text-xs hidden sm:inline">/</span>
+        <span class="text-xs text-zinc-400 font-normal hidden sm:inline">Platform Engine</span>
+        <span class="text-[10px] font-medium px-2 py-0.5 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-400">v3.2</span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-2.5">
+      <a href="/demo/many2go-holidays" target="_blank" class="h-8 px-3 rounded-lg text-xs font-medium text-zinc-300 hover:text-white bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 transition flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <span>Presenter View</span>
+      </a>
+
+      <button onclick="openCreateTenantModal()" class="h-8 px-3.5 rounded-lg text-xs font-medium bg-zinc-100 hover:bg-white text-zinc-950 transition flex items-center gap-1.5 shadow-xs">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+        <span>Onboard Client</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 space-y-7">
+
+    <!-- KPI Metrics Minimalist Grid -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div class="card-surface p-4 rounded-xl transition">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-medium text-zinc-400 tracking-wider uppercase">Active Clients</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+        </div>
+        <div class="mt-2.5 flex items-baseline gap-2">
+          <span id="metric-tenants" class="text-2xl font-semibold text-zinc-100 tracking-tight">0</span>
+          <span class="text-[11px] text-zinc-500">Tenants</span>
+        </div>
+      </div>
+
+      <div class="card-surface p-4 rounded-xl transition">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-medium text-zinc-400 tracking-wider uppercase">Captured Leads</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+        </div>
+        <div class="mt-2.5 flex items-baseline gap-2">
+          <span id="metric-leads" class="text-2xl font-semibold text-zinc-100 tracking-tight">0</span>
+          <span class="text-[11px] text-zinc-500">CRM Inquiries</span>
+        </div>
+      </div>
+
+      <div class="card-surface p-4 rounded-xl transition">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-medium text-zinc-400 tracking-wider uppercase">Conversations</span>
+          <span class="text-[10px] text-zinc-500 font-mono">Gemini 3.5</span>
+        </div>
+        <div class="mt-2.5 flex items-baseline gap-2">
+          <span id="metric-conversations" class="text-2xl font-semibold text-zinc-100 tracking-tight">0</span>
+          <span class="text-[11px] text-zinc-500">Sessions</span>
+        </div>
+      </div>
+
+      <div class="card-surface p-4 rounded-xl transition">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-medium text-zinc-400 tracking-wider uppercase">Lead Conversion</span>
+          <span class="text-[10px] text-zinc-500 font-mono">Real-time</span>
+        </div>
+        <div class="mt-2.5 flex items-baseline gap-2">
+          <span id="metric-conversion" class="text-2xl font-semibold text-zinc-100 tracking-tight">0%</span>
+          <span class="text-[11px] text-zinc-500">Hot / Total</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Segmented Navigation & Filter Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/80 pb-4">
+      <!-- Apple/Linear style segment selector -->
+      <div class="inline-flex p-1 rounded-xl bg-zinc-900/90 border border-zinc-800/80 w-fit">
+        <button onclick="switchTab('agencies')" id="tab-agencies-btn" class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition bg-zinc-800 text-zinc-100 shadow-xs flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+          <span>Client Agencies</span>
+          <span id="agencies-tab-count" class="text-[11px] text-zinc-400 ml-1">0</span>
+        </button>
+
+        <button onclick="switchTab('leads')" id="tab-leads-btn" class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition text-zinc-400 hover:text-zinc-200 flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+          <span>Unified Leads CRM</span>
+          <span id="leads-tab-count" class="text-[11px] text-zinc-500 ml-1">0</span>
+        </button>
+
+        <button onclick="switchTab('unanswered')" id="tab-unanswered-btn" class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition text-zinc-400 hover:text-zinc-200 flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <span>Missing Knowledge</span>
+          <span id="unanswered-tab-count" class="text-[11px] text-zinc-500 ml-1">0</span>
+        </button>
+
+        <button onclick="switchTab('feedback')" id="tab-feedback-btn" class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition text-zinc-400 hover:text-zinc-200 flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>
+          <span>Feedback</span>
+          <span id="feedback-tab-count" class="text-[11px] text-zinc-500 ml-1">0</span>
+        </button>
+      </div>
+
+      <!-- Controls for Leads tab -->
+      <div id="leads-toolbar" class="hidden flex items-center gap-2">
+        <select id="crm-agency-filter" onchange="renderLeadsTable()" class="h-8 bg-zinc-900 border border-zinc-800 text-xs rounded-lg px-2.5 text-zinc-300 focus:outline-none focus:border-zinc-700">
+          <option value="">All Agencies</option>
+        </select>
+        <button onclick="exportLeadsCsv()" class="h-8 px-3 rounded-lg text-xs font-medium text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+          <span>Export CSV</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 1: CLIENT AGENCIES -->
+    <div id="tab-agencies" class="space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Managed Tenants</h2>
+        </div>
+        <div class="text-xs text-zinc-500 font-mono text-[11px]">
+          Universal 1-line script • Isolated memory
+        </div>
+      </div>
+
+      <!-- Agencies Grid -->
+      <div id="agencies-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        <!-- Dynamically rendered -->
+      </div>
+    </div>
+
+    <!-- TAB 2: UNIFIED LEADS CRM -->
+    <div id="tab-leads" class="hidden space-y-4">
+      <div class="flex items-center justify-between gap-3">
+        <h2 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Inquiries & Leads</h2>
+        <div class="relative">
+          <svg class="w-3.5 h-3.5 absolute left-3 top-2.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          <input
+            id="lead-search-input"
+            type="text"
+            placeholder="Search leads by name, phone, destination..."
+            oninput="renderLeadsTable()"
+            class="h-8 pl-8 pr-3 bg-zinc-900 border border-zinc-800 text-xs rounded-lg w-72 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-700 transition"
+          />
+        </div>
+      </div>
+
+      <div class="card-surface rounded-xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-zinc-300">
+            <thead class="bg-zinc-950/80 text-zinc-400 text-[11px] font-medium border-b border-zinc-800/80">
+              <tr>
+                <th class="py-3 px-4">Client Agency</th>
+                <th class="py-3 px-4">Contact</th>
+                <th class="py-3 px-4">Destination</th>
+                <th class="py-3 px-4">Pax / Budget</th>
+                <th class="py-3 px-4">Seniors</th>
+                <th class="py-3 px-4">Score</th>
+                <th class="py-3 px-4">AI Executive Summary</th>
+                <th class="py-3 px-4">Timestamp</th>
+                <th class="py-3 px-4 text-right"></th>
+              </tr>
+            </thead>
+            <tbody id="leads-table-body" class="divide-y divide-zinc-800/50 font-normal">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: MISSING KNOWLEDGE / UNANSWERED QUESTIONS -->
+    <div id="tab-unanswered" class="hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Unanswered Queries & Knowledge Gaps</h2>
+          <p class="text-xs text-zinc-500 mt-0.5">Recurring questions where information was missing from the agency knowledge base</p>
+        </div>
+        <button onclick="loadUnansweredQuestions()" class="h-8 px-3 rounded-lg text-xs font-medium text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+
+      <div class="card-surface rounded-xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-zinc-300">
+            <thead class="bg-zinc-950/80 text-zinc-400 text-[11px] font-medium border-b border-zinc-800/80">
+              <tr>
+                <th class="py-3 px-4">Client Agency</th>
+                <th class="py-3 px-4">Visitor Question</th>
+                <th class="py-3 px-4">AI Diagnostic Flag</th>
+                <th class="py-3 px-4">Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="unanswered-table-body" class="divide-y divide-zinc-800/50 font-normal">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: CUSTOMER FEEDBACK & QUALITY -->
+    <div id="tab-feedback" class="hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Customer Response Feedback</h2>
+          <p class="text-xs text-zinc-500 mt-0.5">Thumbs up/down feedback and comments left by website visitors</p>
+        </div>
+        <button onclick="loadFeedbackRecords()" class="h-8 px-3 rounded-lg text-xs font-medium text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+
+      <div class="card-surface rounded-xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-zinc-300">
+            <thead class="bg-zinc-950/80 text-zinc-400 text-[11px] font-medium border-b border-zinc-800/80">
+              <tr>
+                <th class="py-3 px-4">Client Agency</th>
+                <th class="py-3 px-4">Rating</th>
+                <th class="py-3 px-4">Visitor Feedback / Comments</th>
+                <th class="py-3 px-4">Session ID</th>
+                <th class="py-3 px-4">Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="feedback-table-body" class="divide-y divide-zinc-800/50 font-normal">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- =============================================================== -->
+  <!-- MODAL: ONBOARD NEW CLIENT                                       -->
+  <!-- =============================================================== -->
+  <div id="tenant-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="card-surface rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl border border-zinc-800">
+      <div class="p-5 border-b border-zinc-800 flex items-center justify-between bg-zinc-950/80 sticky top-0 z-10 backdrop-blur">
+        <div>
+          <h3 class="font-semibold text-sm text-zinc-100 tracking-tight">Onboard Client Agency</h3>
+          <p class="text-xs text-zinc-400 mt-0.5">Generates isolated assistant ID, knowledge base, and embed snippet</p>
+        </div>
+        <button onclick="closeCreateTenantModal()" class="w-7 h-7 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 flex items-center justify-center text-sm transition">&times;</button>
+      </div>
+
+      <!-- Target Presets -->
+      <div class="p-4 bg-zinc-950/50 border-b border-zinc-800/80">
+        <span class="text-[11px] font-medium text-zinc-400 block mb-2 uppercase tracking-wider">Fast Presets</span>
+        <div class="flex flex-wrap gap-1.5 text-xs">
+          <button type="button" onclick="fillPreset('Choose Travel', 'https://www.choose.travel/packages', 'choose-travel', '#0284c7', 'Tailor-made domestic and international packages with flights')" class="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 rounded-md text-zinc-300 text-[11px] font-medium border border-zinc-800 transition">Choose Travel</button>
+          <button type="button" onclick="fillPreset('Hopigo', 'https://hopigo.in/', 'hopigo', '#f97316', 'Curated self-drive road trips, homestays, and weekend getaways')" class="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 rounded-md text-zinc-300 text-[11px] font-medium border border-zinc-800 transition">Hopigo</button>
+          <button type="button" onclick="fillPreset('Safaar Travel India', 'https://www.safaar.in/', 'safaar-travel', '#10b981', 'Cultural heritage tours across Rajasthan, Golden Triangle & South India')" class="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 rounded-md text-zinc-300 text-[11px] font-medium border border-zinc-800 transition">Safaar Travel</button>
+          <button type="button" onclick="fillPreset('Pick The Trip', 'https://pickthetrip.com/', 'pick-the-trip', '#8b5cf6', 'Personalized vacation planning with zero booking fees and transparent quotes')" class="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 rounded-md text-zinc-300 text-[11px] font-medium border border-zinc-800 transition">Pick The Trip</button>
+        </div>
+      </div>
+
+      <form onsubmit="handleTenantSubmit(event)" class="p-5 space-y-3.5 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-zinc-400 font-medium mb-1">Agency Name *</label>
+            <input id="form-name" type="text" required placeholder="e.g. Roamzari Holidays" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition" />
+          </div>
+          <div>
+            <label class="block text-zinc-400 font-medium mb-1">Slug *</label>
+            <input id="form-slug" type="text" required placeholder="e.g. roamzari" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 font-mono focus:outline-none focus:border-zinc-600 transition" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-zinc-400 font-medium mb-1">Website URL *</label>
+            <input id="form-website" type="url" required placeholder="https://roamzari.com/" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition" />
+          </div>
+          <div>
+            <label class="block text-zinc-400 font-medium mb-1">Logo URL <span class="text-zinc-500 font-normal">(Auto if blank)</span></label>
+            <input id="form-logo" type="url" placeholder="https://.../logo.png" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition" />
+          </div>
+          <div>
+            <label class="block text-zinc-400 font-medium mb-1">Assistant Display Name</label>
+            <input id="form-asst-name" type="text" placeholder="e.g. Roamzari AI Guide" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-zinc-400 font-medium mb-1">Primary Color</label>
+            <input id="form-color-primary" type="color" value="#047857" class="w-full h-9 bg-zinc-950 border border-zinc-800 rounded-lg p-1 cursor-pointer" />
+          </div>
+          <div>
+            <label class="block text-zinc-400 font-medium mb-1">Secondary Color</label>
+            <input id="form-color-secondary" type="color" value="#064e3b" class="w-full h-9 bg-zinc-950 border border-zinc-800 rounded-lg p-1 cursor-pointer" />
+          </div>
+          <div>
+            <label class="block text-zinc-400 font-medium mb-1">Languages</label>
+            <input id="form-langs" type="text" value="English, Hindi" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-zinc-400 font-medium mb-1">Welcome Greeting Message *</label>
+          <textarea id="form-welcome" rows="2" required placeholder="Welcome to [Agency]! How can we assist your trip planning?" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-zinc-400 font-medium mb-1">Knowledge Base & Specialties *</label>
+          <textarea id="form-kb" rows="3" required placeholder="Describe specialties (Senior tours, homestyle Indian meals, flights, visas, cancellation policy)..." class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition"></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-zinc-400 font-medium mb-1">Phone / WhatsApp</label>
+            <input id="form-phone" type="text" placeholder="+91 9845370515" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition" />
+          </div>
+          <div>
+            <label class="block text-zinc-400 font-medium mb-1">Google Sheets Webhook URL</label>
+            <input id="form-webhook" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-zinc-400 font-medium mb-1">Default Detail Mode</label>
+            <select id="form-detail-level" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition text-xs">
+              <option value="standard" selected>Standard (Balanced 100-150w)</option>
+              <option value="quick">Quick (Concise &lt;60w)</option>
+              <option value="detailed">Detailed (Comprehensive 200+w)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-zinc-400 font-medium mb-1">Tone of Voice</label>
+            <input id="form-tone" type="text" value="Professional, warm, and expert travel consultant" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition text-xs" />
+          </div>
+        </div>
+
+        <!-- Data Privacy & Storage Option -->
+        <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-semibold text-zinc-200 uppercase tracking-wider flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7zM9 12h6M9 16h6M9 8h2" /></svg>
+              Database Chat Storage
+            </span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">Privacy & Storage Control</span>
+          </div>
+          <p class="text-[11px] text-zinc-400 leading-relaxed">
+            Choose whether to store full chat messages in SQLite database or run in-memory stateless mode:
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <label class="flex items-start gap-2 p-2.5 rounded-lg bg-zinc-950 border border-zinc-800 hover:border-zinc-700 cursor-pointer transition">
+              <input type="radio" name="form-store-chats" value="0" checked class="mt-0.5 text-emerald-500 focus:ring-0">
+              <div class="text-[11px]">
+                <strong class="text-zinc-200 block font-medium">Stateless (Recommended)</strong>
+                <span class="text-zinc-500 block text-[10.5px] leading-snug mt-0.5">Zero DB chat load. 100% visitor privacy. Fast in-memory responses.</span>
+              </div>
+            </label>
+            <label class="flex items-start gap-2 p-2.5 rounded-lg bg-zinc-950 border border-zinc-800 hover:border-zinc-700 cursor-pointer transition">
+              <input type="radio" name="form-store-chats" value="1" class="mt-0.5 text-emerald-500 focus:ring-0">
+              <div class="text-[11px]">
+                <strong class="text-zinc-200 block font-medium">Store Full Chat History</strong>
+                <span class="text-zinc-500 block text-[10.5px] leading-snug mt-0.5">Archives complete conversations in database for auditing.</span>
+              </div>
+            </label>
+          </div>
+          <div class="p-2 rounded bg-zinc-950/80 border border-zinc-800/80 text-[10.5px] text-zinc-400 flex items-center gap-1.5">
+            <span class="text-emerald-400 font-bold">✓ Guarantee:</span>
+            <span>Leads, customer inquiries, and booking details are ALWAYS captured in CRM regardless of chat storage choice.</span>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-zinc-800 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeCreateTenantModal()" class="px-3.5 py-1.5 text-zinc-400 hover:text-white font-medium rounded-lg">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 rounded-lg text-xs font-medium bg-zinc-100 hover:bg-white text-zinc-950 transition">
+            Create Client Agency
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =============================================================== -->
+  <!-- MODAL: EMBED CODE & LIVE VERIFICATION WORKFLOW                  -->
+  <!-- =============================================================== -->
+  <div id="snippet-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="card-surface rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl border border-zinc-800">
+      <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-zinc-400"></span>
+          <h3 class="font-semibold text-sm text-zinc-100" id="snippet-agency-title">Embed Configuration</h3>
+        </div>
+        <button onclick="closeSnippetModal()" class="w-6 h-6 rounded-md text-zinc-400 hover:text-white flex items-center justify-center text-sm">&times;</button>
+      </div>
+
+      <!-- Verification Status Bar -->
+      <div class="p-3 rounded-xl border border-zinc-800/80 bg-zinc-950/70 flex items-center justify-between text-xs">
+        <div>
+          <span class="text-[10px] text-zinc-500 uppercase tracking-wider font-medium block">Installation Status</span>
+          <div class="flex items-center gap-1.5 mt-0.5">
+            <span id="snippet-verify-dot" class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
+            <span id="snippet-verify-text" class="font-medium text-zinc-400">Pending Verification</span>
+          </div>
+        </div>
+        <button id="snippet-verify-btn" onclick="runLiveVerification()" class="h-7 px-2.5 rounded-lg text-[11px] font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 transition flex items-center gap-1">
+          <svg class="w-3 h-3 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+          <span>Verify Website</span>
+        </button>
+      </div>
+
+      <div id="snippet-verify-diagnostics" class="hidden p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-[11px] text-zinc-400 leading-relaxed">
+        <!-- Live debug response -->
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-medium text-zinc-400 mb-1.5">Universal Embed Snippet</label>
+        <div class="relative">
+          <textarea
+            id="snippet-code-box"
+            readonly
+            rows="2"
+            class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs font-mono text-zinc-300 focus:outline-none select-all resize-none"
+          ></textarea>
+          <button
+            onclick="copySnippetCode()"
+            id="copy-snippet-btn"
+            class="absolute top-2 right-2 h-6 px-2.5 rounded-md text-[10px] font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 transition">
+            Copy
+          </button>
+        </div>
+        <p class="text-[11px] text-zinc-500 mt-1">Paste before <code class="text-zinc-400 font-mono">&lt;/body&gt;</code> on WordPress, Shopify, Webflow, or custom HTML.</p>
+      </div>
+
+      <div class="card-surface p-3 rounded-xl space-y-2 text-xs">
+        <div class="flex items-center justify-between">
+          <span class="text-zinc-400">Standalone Hosted Portal</span>
+          <div class="flex items-center gap-2">
+            <button onclick="copyStandaloneUrl()" class="text-[11px] text-zinc-400 hover:text-white underline">Copy URL</button>
+            <a id="snippet-standalone-link" href="#" target="_blank" class="text-zinc-300 hover:text-white flex items-center gap-1 font-mono text-[11px]">
+              <span>Open</span>
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+            </a>
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-zinc-400">Executive Pitch Demo</span>
+          <a id="snippet-demo-link" href="#" target="_blank" class="text-zinc-300 hover:text-white flex items-center gap-1 font-mono text-[11px]">
+            <span>Launch Pitch View</span>
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="pt-1 flex justify-end">
+        <button onclick="closeSnippetModal()" class="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 transition">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============================================================== -->
+  <!-- MODAL: CLIENT SETTINGS & GUI CONTROLS PANEL                     -->
+  <!-- =============================================================== -->
+  <div id="tenant-settings-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="card-surface rounded-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl border border-zinc-800 flex flex-col">
+      <!-- Modal Header -->
+      <div class="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-950/90 sticky top-0 z-10 backdrop-blur">
+        <div class="flex items-center gap-3">
+          <div id="setting-logo-preview" class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
+            <span class="text-xs font-semibold text-zinc-200">AI</span>
+          </div>
+          <div>
+            <h3 class="font-semibold text-sm text-zinc-100 flex items-center gap-2">
+              <span id="setting-modal-agency-name">Client Settings</span>
+              <span id="setting-modal-category-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 font-mono">Travel</span>
+            </h3>
+            <p class="text-[11px] text-zinc-400">Configure assistant tone, branding, detail mode, and database storage without code</p>
+          </div>
+        </div>
+        <button onclick="closeTenantSettingsModal()" class="w-7 h-7 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 flex items-center justify-center text-sm transition">&times;</button>
+      </div>
+
+      <!-- Settings Form -->
+      <form onsubmit="handleTenantSettingsSubmit(event)" class="p-5 space-y-4 text-xs">
+        <input type="hidden" id="setting-tenant-id" />
+
+        <!-- Tab-like section 1: Brand & Visual Theme -->
+        <div class="space-y-3 p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80">
+          <span class="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
+            Branding & Visual Appearance
+          </span>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-zinc-400 font-medium mb-1">Company / Agency Name</label>
+              <input id="setting-name" type="text" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 font-medium mb-1">Assistant Display Name</label>
+              <input id="setting-asst-name" type="text" placeholder="e.g. Travel Concierge AI, CricBot" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-zinc-400 font-medium mb-1">Website URL</label>
+              <input id="setting-website" type="url" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 font-medium mb-1">Logo URL (Auto-fetched if blank)</label>
+              <input id="setting-logo" type="url" oninput="updateSettingLogoPreview(this.value)" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3 pt-1">
+            <div>
+              <label class="block text-zinc-400 font-medium mb-1">Primary Color</label>
+              <input id="setting-color-primary" type="color" class="w-full h-8 bg-zinc-950 border border-zinc-800 rounded-lg p-1 cursor-pointer" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 font-medium mb-1">Secondary Color</label>
+              <input id="setting-color-secondary" type="color" class="w-full h-8 bg-zinc-950 border border-zinc-800 rounded-lg p-1 cursor-pointer" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 font-medium mb-1">Accent Color</label>
+              <input id="setting-color-accent" type="color" class="w-full h-8 bg-zinc-950 border border-zinc-800 rounded-lg p-1 cursor-pointer" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: AI Tone & Response Mode -->
+        <div class="space-y-3 p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80">
+          <span class="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z" /></svg>
+            AI Persona, Tone & Detail Level
+          </span>
+
+          <div>
+            <label class="block text-zinc-400 font-medium mb-1">Tone of Voice (Quick Presets or Custom)</label>
+            <div class="flex flex-wrap gap-1.5 mb-2">
+              <button type="button" onclick="setSettingTonePreset('Professional, warm, and expert travel consultant')" class="px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10.5px] text-zinc-300">Professional</button>
+              <button type="button" onclick="setSettingTonePreset('Friendly, casual, enthusiastic, and highly approachable')" class="px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10.5px] text-zinc-300">Friendly & Casual</button>
+              <button type="button" onclick="setSettingTonePreset('High-energy sports commentator, fast-paced, and live action focused')" class="px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10.5px] text-zinc-300">High-Energy Sports</button>
+              <button type="button" onclick="setSettingTonePreset('Cinephile expert, authoritative movie critic, engaging and analytical')" class="px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10.5px] text-zinc-300">Cinephile Critic</button>
+              <button type="button" onclick="setSettingTonePreset('Luxury VIP concierge, sophisticated, refined, and white-glove service')" class="px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10.5px] text-zinc-300">Luxury Concierge</button>
+            </div>
+            <input id="setting-tone" type="text" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition" />
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-zinc-400 font-medium mb-1">Default Detail Mode</label>
+              <select id="setting-detail-level" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition text-xs">
+                <option value="quick">Quick (Crisp bullet points &lt;60 words)</option>
+                <option value="standard">Standard (Balanced explanation 100-150 words)</option>
+                <option value="detailed">Detailed (Comprehensive 200+ words with full breakdown)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-zinc-400 font-medium mb-1">Supported Languages</label>
+              <input id="setting-langs" type="text" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-zinc-400 font-medium mb-1">Welcome Greeting Message</label>
+            <textarea id="setting-welcome" rows="2" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-zinc-400 font-medium mb-1">Knowledge Base, Specialties & FAQs</label>
+            <textarea id="setting-kb" rows="3" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition"></textarea>
+          </div>
+        </div>
+
+        <!-- Section 3: Data Privacy & Storage Option -->
+        <div class="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-semibold text-zinc-200 uppercase tracking-wider flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7zM9 12h6M9 16h6M9 8h2" /></svg>
+              Data Privacy & Database Storage Option
+            </span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">Client Controlled</span>
+          </div>
+
+          <p class="text-[11px] text-zinc-400 leading-relaxed">
+            Choose whether user chat conversations are saved to your SQLite database or handled purely in-memory:
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <label class="flex items-start gap-2 p-2.5 rounded-lg bg-zinc-950 border border-zinc-800 hover:border-zinc-700 cursor-pointer transition">
+              <input type="radio" id="setting-store-chats-0" name="setting-store-chats" value="0" class="mt-0.5 text-emerald-500 focus:ring-0">
+              <div class="text-[11px]">
+                <strong class="text-zinc-200 block font-medium">Stateless (Zero Chat Storage)</strong>
+                <span class="text-zinc-500 block text-[10.5px] leading-snug mt-0.5">Zero DB chat load. 100% privacy. Lightning-fast responses.</span>
+              </div>
+            </label>
+            <label class="flex items-start gap-2 p-2.5 rounded-lg bg-zinc-950 border border-zinc-800 hover:border-zinc-700 cursor-pointer transition">
+              <input type="radio" id="setting-store-chats-1" name="setting-store-chats" value="1" class="mt-0.5 text-emerald-500 focus:ring-0">
+              <div class="text-[11px]">
+                <strong class="text-zinc-200 block font-medium">Store Full Chat History</strong>
+                <span class="text-zinc-500 block text-[10.5px] leading-snug mt-0.5">Archives full visitor conversations in SQLite database for auditing.</span>
+              </div>
+            </label>
+          </div>
+
+          <div class="p-2.5 rounded-lg bg-emerald-950/20 border border-emerald-900/40 text-[11px] text-emerald-300/90 flex items-start gap-2">
+            <svg class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <div>
+              <strong class="text-emerald-300 font-medium">Always-On Lead Capture Guarantee:</strong>
+              <p class="text-emerald-400/80 text-[10.5px] mt-0.5">Even when chat storage is set to Stateless, customer inquiries, product orders, booking requests, and phone numbers are <strong>automatically captured and saved to your CRM</strong> so no sales opportunities are missed.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Contact & Webhooks -->
+        <div class="space-y-3 p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80">
+          <span class="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+            Contact & Webhook Integrations
+          </span>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-zinc-400 font-medium mb-1">Phone / WhatsApp</label>
+              <input id="setting-phone" type="text" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition" />
+            </div>
+            <div>
+              <label class="block text-zinc-400 font-medium mb-1">Contact Email</label>
+              <input id="setting-email" type="email" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-zinc-400 font-medium mb-1">Google Sheets / CRM Webhook URL</label>
+            <input id="setting-webhook" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-zinc-100 focus:outline-none focus:border-zinc-600 transition" />
+          </div>
+        </div>
+
+        <!-- Submit & Actions -->
+        <div class="pt-3 border-t border-zinc-800 flex items-center justify-between">
+          <a id="setting-live-preview-link" href="#" target="_blank" class="text-xs text-zinc-400 hover:text-white flex items-center gap-1.5 underline">
+            <span>Test in Live Demo</span>
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+          </a>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="closeTenantSettingsModal()" class="px-3.5 py-1.5 text-zinc-400 hover:text-white font-medium rounded-lg">Cancel</button>
+            <button type="submit" id="save-setting-btn" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-zinc-950 transition flex items-center gap-1.5">
+              <span>Save Configuration</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- FRONTEND SCRIPT -->
+  <script>
+    let tenants = [];
+    let leads = [];
+    let currentTenantIdForVerification = null;
+
+    async function loadData() {
+      try {
+        const [tRes, lRes, aRes] = await Promise.all([
+          fetch('/api/tenants'),
+          fetch('/api/leads'),
+          fetch('/api/analytics')
+        ]);
+
+        tenants = await tRes.json();
+        const lData = await lRes.json();
+        leads = lData.leads || [];
+        const analytics = await aRes.json();
+
+        // Update KPIs
+        document.getElementById("metric-tenants").textContent = analytics.total_tenants || tenants.length;
+        document.getElementById("metric-leads").textContent = analytics.total_leads || leads.length;
+        document.getElementById("metric-conversations").textContent = analytics.total_conversations || 0;
+        document.getElementById("metric-conversion").textContent = analytics.conversion_rate || "0%";
+        document.getElementById("leads-tab-count").textContent = leads.length;
+        document.getElementById("agencies-tab-count").textContent = tenants.length;
+
+        // Populate Agency Filter
+        const filterSelect = document.getElementById("crm-agency-filter");
+        filterSelect.innerHTML = `<option value="">All Agencies (${tenants.length})</option>` +
+          tenants.map(t => `<option value="${t.id}">${t.name}</option>`).join("");
+
+        renderAgenciesGrid();
+        renderLeadsTable();
+      } catch (err) {
+        console.error("Error loading dashboard data:", err);
+      }
+    }
+
+    let unansweredQuestions = [];
+    let feedbackRecords = [];
+
+    async function loadUnansweredQuestions() {
+      try {
+        const res = await fetch('/api/admin/unanswered');
+        const data = await res.json();
+        unansweredQuestions = data.unanswered_questions || [];
+        document.getElementById("unanswered-tab-count").textContent = unansweredQuestions.length;
+        renderUnansweredTable();
+      } catch (err) {
+        console.error("Error loading unanswered:", err);
+      }
+    }
+
+    function renderUnansweredTable() {
+      const container = document.getElementById("unanswered-table-body");
+      if (unansweredQuestions.length === 0) {
+        container.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-zinc-500 text-xs">No knowledge gaps logged yet. Assistant knowledge is well grounded!</td></tr>`;
+        return;
+      }
+      container.innerHTML = unansweredQuestions.map(u => `
+        <tr class="hover:bg-zinc-900/40 transition">
+          <td class="py-3 px-4 font-medium text-zinc-200">${u.tenant_name || 'Agency'}</td>
+          <td class="py-3 px-4 text-zinc-100 font-medium">${u.question}</td>
+          <td class="py-3 px-4 text-amber-400 font-mono text-[11px]">${u.reason}</td>
+          <td class="py-3 px-4 text-zinc-500 font-mono text-[11px]">${(u.created_at || '').slice(0, 16)}</td>
+        </tr>
+      `).join("");
+    }
+
+    async function loadFeedbackRecords() {
+      try {
+        const res = await fetch('/api/admin/feedback');
+        const data = await res.json();
+        feedbackRecords = data.feedback || [];
+        document.getElementById("feedback-tab-count").textContent = feedbackRecords.length;
+        renderFeedbackTable();
+      } catch (err) {
+        console.error("Error loading feedback:", err);
+      }
+    }
+
+    function renderFeedbackTable() {
+      const container = document.getElementById("feedback-table-body");
+      if (feedbackRecords.length === 0) {
+        container.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-zinc-500 text-xs">No customer feedback logged yet.</td></tr>`;
+        return;
+      }
+      container.innerHTML = feedbackRecords.map(f => `
+        <tr class="hover:bg-zinc-900/40 transition">
+          <td class="py-3 px-4 font-medium text-zinc-200">${f.tenant_name || 'Agency'}</td>
+          <td class="py-3 px-4">
+            <span class="text-xs px-2 py-0.5 rounded ${f.rating === 'up' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}">
+              ${f.rating === 'up' ? '👍 Helpful' : '👎 Improve'}
+            </span>
+          </td>
+          <td class="py-3 px-4 text-zinc-300">${f.comment || '<span class="text-zinc-600 italic">No comment</span>'}</td>
+          <td class="py-3 px-4 text-zinc-500 font-mono text-[11px]">${f.session_id}</td>
+          <td class="py-3 px-4 text-zinc-500 font-mono text-[11px]">${(f.created_at || '').slice(0, 16)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function switchTab(tab) {
+      const allTabs = ['agencies', 'leads', 'unanswered', 'feedback'];
+      allTabs.forEach(t => {
+        const el = document.getElementById(`tab-${t}`);
+        const btn = document.getElementById(`tab-${t}-btn`);
+        if (t === tab) {
+          el.classList.remove('hidden');
+          btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-medium transition bg-zinc-800 text-zinc-100 shadow-xs flex items-center gap-1.5";
+        } else {
+          el.classList.add('hidden');
+          btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-medium transition text-zinc-400 hover:text-zinc-200 flex items-center gap-1.5";
+        }
+      });
+
+      const leadsToolbar = document.getElementById('leads-toolbar');
+      if (tab === 'leads') leadsToolbar.classList.remove('hidden');
+      else leadsToolbar.classList.add('hidden');
+
+      if (tab === 'unanswered') loadUnansweredQuestions();
+      if (tab === 'feedback') loadFeedbackRecords();
+    }
+
+    function renderAgenciesGrid() {
+      const container = document.getElementById("agencies-grid");
+      if (!tenants || tenants.length === 0) {
+        container.innerHTML = `<div class="col-span-full py-12 text-center text-zinc-500 text-xs">No client agencies found. Click "Onboard Client" above.</div>`;
+        return;
+      }
+
+      container.innerHTML = tenants.map(t => {
+        const isVerified = t.installation_verified === 1;
+        const initial = (t.name || 'A').slice(0, 2).toUpperCase();
+
+        return `
+        <div class="card-surface rounded-xl p-4 flex flex-col justify-between transition-all duration-150">
+          <div>
+            <div class="flex items-start justify-between gap-3 mb-2.5">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center font-semibold text-zinc-200 text-xs shrink-0 tracking-tight overflow-hidden p-0.5" style="border-left: 2px solid ${t.primary_color || '#3b82f6'};">
+                  ${t.logo_url 
+                    ? `<img src="${t.logo_url}" alt="${t.name}" class="w-full h-full object-contain rounded-xs bg-white" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><span style="display:none;" class="w-full h-full flex items-center justify-center text-xs font-semibold text-zinc-200">${initial}</span>`
+                    : initial
+                  }
+                </div>
+                <div class="min-w-0">
+                  <h3 class="font-medium text-xs text-zinc-100 truncate">${t.name}</h3>
+                  <a href="${t.website_url}" target="_blank" class="text-[11px] text-zinc-500 hover:text-zinc-300 truncate flex items-center gap-1 transition">
+                    <span>${(t.website_url || '').replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
+                    <svg class="w-2.5 h-2.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                  </a>
+                </div>
+              </div>
+              <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 shrink-0">
+                ${t.total_leads || 0} leads
+              </span>
+            </div>
+
+            <p class="text-[11px] text-zinc-400 line-clamp-2 mb-3 leading-relaxed">${t.welcome_message || t.tagline}</p>
+
+            <div class="bg-zinc-950/70 p-2.5 rounded-lg border border-zinc-900 mb-3 space-y-1 text-[11px] font-mono">
+              <div class="flex items-center justify-between text-zinc-500">
+                <span>asst_id</span>
+                <span class="text-zinc-400 truncate max-w-[160px]">${t.assistant_id}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-zinc-500">embed</span>
+                ${isVerified 
+                  ? `<span class="text-emerald-400 flex items-center gap-1 font-sans text-[10px] font-medium"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Verified</span>` 
+                  : `<span class="text-zinc-500 flex items-center gap-1 font-sans text-[10px]"><span class="w-1.5 h-1.5 rounded-full bg-zinc-600"></span> Unverified</span>`
+                }
+              </div>
+              <div class="flex items-center justify-between pt-0.5 border-t border-zinc-900/60">
+                <span class="text-zinc-500">storage</span>
+                ${t.store_chat_history == 1
+                  ? `<span class="text-amber-400 flex items-center gap-1 font-sans text-[10px] font-medium"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> DB Logs ON</span>`
+                  : `<span class="text-emerald-400 flex items-center gap-1 font-sans text-[10px] font-medium"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Stateless (No DB Chats)</span>`
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2.5 border-t border-zinc-800/80 flex items-center justify-between gap-1.5">
+            <div class="flex items-center gap-1.5">
+              <button onclick="openSnippetModal('${t.id}')" class="h-7 px-2.5 rounded-lg text-[11px] font-medium text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 transition flex items-center gap-1">
+                <svg class="w-3 h-3 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                <span>Snippet</span>
+              </button>
+              <button onclick="openTenantSettingsModal('${t.id}')" title="Configure AI tone, branding, detail mode, and database storage" class="h-7 px-2.5 rounded-lg text-[11px] font-medium text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 transition flex items-center gap-1">
+                <svg class="w-3 h-3 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span>Settings</span>
+              </button>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <a href="/c/${t.slug}" target="_blank" title="Hosted White-Label URL" class="w-7 h-7 rounded-lg text-zinc-400 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center transition">
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+              </a>
+              <a href="/demo/${t.slug}" target="_blank" title="Executive Pitch View" class="h-7 px-2.5 rounded-lg text-[11px] font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 transition flex items-center gap-1">
+                <span>Demo</span>
+                <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      `}).join("");
+    }
+
+    function renderLeadsTable() {
+      const container = document.getElementById("leads-table-body");
+      const filter = (document.getElementById("lead-search-input").value || "").toLowerCase().trim();
+      const agencyFilter = (document.getElementById("crm-agency-filter").value || "");
+
+      const filtered = leads.filter(l => {
+        if (agencyFilter && l.tenant_id !== agencyFilter) return false;
+        if (!filter) return true;
+        return (l.customer_name || "").toLowerCase().includes(filter) ||
+               (l.phone_number || "").toLowerCase().includes(filter) ||
+               (l.destination || "").toLowerCase().includes(filter) ||
+               (l.tenant_name || "").toLowerCase().includes(filter);
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-zinc-500 text-xs">No records found matching criteria.</td></tr>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(l => `
+        <tr class="hover:bg-zinc-900/40 transition">
+          <td class="py-3 px-4 font-medium text-zinc-200">${l.tenant_name || 'Agency'}</td>
+          <td class="py-3 px-4">
+            <div class="font-medium text-zinc-100">${l.customer_name}</div>
+            <a href="tel:${l.phone_number}" class="text-[11px] text-zinc-400 hover:text-zinc-200 font-mono">${l.phone_number}</a>
+          </td>
+          <td class="py-3 px-4 text-zinc-300">${l.destination} <span class="text-zinc-500 text-[10px]">(${l.travel_type})</span></td>
+          <td class="py-3 px-4 text-zinc-400 font-mono text-[11px]">Pax: ${l.pax_count} • ${l.budget}</td>
+          <td class="py-3 px-4 ${l.includes_seniors && l.includes_seniors.includes('YES') ? 'text-amber-400 font-medium' : 'text-zinc-500'}">${l.includes_seniors}</td>
+          <td class="py-3 px-4">
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded ${l.lead_score.includes('HOT') ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold' : 'bg-zinc-800 text-zinc-400'}">
+              ${l.lead_score.replace('🔥', '').trim()}
+            </span>
+          </td>
+          <td class="py-3 px-4 text-zinc-400 max-w-xs truncate">${l.summary_notes}</td>
+          <td class="py-3 px-4 text-zinc-500 font-mono text-[11px] whitespace-nowrap">${(l.created_at || l.timestamp || '').slice(0, 16)}</td>
+          <td class="py-3 px-4 text-right">
+            <button onclick="handleDeleteLead('${l.id}')" title="Delete record" class="w-6 h-6 rounded text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition inline-flex items-center justify-center">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+            </button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function openSnippetModal(tenantId) {
+      currentTenantIdForVerification = tenantId;
+      const t = tenants.find(x => x.id === tenantId);
+      if (!t) return;
+
+      const host = window.location.origin;
+      const snippet = `<script src="${host}/widget.js" data-assistant-id="${t.assistant_id}" defer><\\/script>`;
+
+      document.getElementById("snippet-agency-title").textContent = `${t.name} • Setup`;
+      document.getElementById("snippet-code-box").value = snippet;
+      document.getElementById("snippet-standalone-link").href = `/c/${t.slug}`;
+      document.getElementById("snippet-demo-link").href = `/demo/${t.slug}`;
+
+      // Reset verification state
+      const verifyDot = document.getElementById("snippet-verify-dot");
+      const verifyText = document.getElementById("snippet-verify-text");
+      if (t.installation_verified === 1) {
+        verifyDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
+        verifyText.textContent = "Verified Active on Target Website";
+        verifyText.className = "font-medium text-emerald-400";
+      } else {
+        verifyDot.className = "w-1.5 h-1.5 rounded-full bg-zinc-600";
+        verifyText.textContent = "Unverified / Snippet not detected yet";
+        verifyText.className = "font-medium text-zinc-400";
+      }
+
+      document.getElementById("snippet-verify-diagnostics").classList.add("hidden");
+      document.getElementById("snippet-modal").classList.remove("hidden");
+    }
+
+    function closeSnippetModal() {
+      document.getElementById("snippet-modal").classList.add("hidden");
+    }
+
+    function copySnippetCode() {
+      const box = document.getElementById("snippet-code-box");
+      box.select();
+      navigator.clipboard.writeText(box.value);
+      const btn = document.getElementById("copy-snippet-btn");
+      btn.textContent = "Copied";
+      setTimeout(() => btn.textContent = "Copy", 1800);
+    }
+
+    function copyStandaloneUrl() {
+      const link = document.getElementById("snippet-standalone-link").href;
+      navigator.clipboard.writeText(link);
+      alert("Direct URL copied to clipboard.");
+    }
+
+    async function runLiveVerification() {
+      if (!currentTenantIdForVerification) return;
+      const btn = document.getElementById("snippet-verify-btn");
+      const verifyDot = document.getElementById("snippet-verify-dot");
+      const verifyText = document.getElementById("snippet-verify-text");
+      const diagBox = document.getElementById("snippet-verify-diagnostics");
+
+      btn.disabled = true;
+      btn.innerHTML = `<span>Checking...</span>`;
+
+      try {
+        const res = await fetch("/api/verify-install", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tenant_id: currentTenantIdForVerification })
+        });
+        const data = await res.json();
+
+        diagBox.classList.remove("hidden");
+        if (data.verified) {
+          verifyDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
+          verifyText.textContent = "Verified Active!";
+          verifyText.className = "font-medium text-emerald-400";
+          diagBox.innerHTML = `<span class="text-emerald-400 font-medium">✓ Found:</span> ${data.message}`;
+        } else {
+          verifyDot.className = "w-1.5 h-1.5 rounded-full bg-zinc-600";
+          verifyText.textContent = "Snippet Not Detected";
+          verifyText.className = "font-medium text-zinc-400";
+          diagBox.innerHTML = `<span class="text-zinc-300 font-medium">Result:</span> ${data.message}<br/><span class="text-zinc-500 mt-1 block">${data.diagnostics ? (data.diagnostics.troubleshooting || '') : ''}</span>`;
+        }
+        await loadData();
+      } catch (err) {
+        verifyText.textContent = "Connection check failed";
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg class="w-3 h-3 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg><span>Verify Website</span>`;
+      }
+    }
+
+    async function handleDeleteLead(leadId) {
+      if (!confirm("Delete this lead record permanently?")) return;
+      try {
+        await fetch(`/api/leads/${leadId}`, { method: 'DELETE' });
+        await loadData();
+      } catch (err) {
+        alert("Failed to delete lead.");
+      }
+    }
+
+    function fillPreset(name, url, slug, color, kb) {
+      document.getElementById("form-name").value = name;
+      document.getElementById("form-website").value = url;
+      if (document.getElementById("form-logo")) document.getElementById("form-logo").value = "";
+      document.getElementById("form-slug").value = slug;
+      document.getElementById("form-color-primary").value = color;
+      document.getElementById("form-asst-name").value = `${name} AI Concierge`;
+      document.getElementById("form-welcome").value = `Hello and welcome to **${name}**! Where are you planning your next trip?`;
+      document.getElementById("form-kb").value = kb;
+    }
+
+    function openCreateTenantModal() {
+      document.getElementById("tenant-modal").classList.remove("hidden");
+    }
+
+    function closeCreateTenantModal() {
+      document.getElementById("tenant-modal").classList.add("hidden");
+    }
+
+    async function handleTenantSubmit(e) {
+      e.preventDefault();
+      const storeRadios = document.getElementsByName("form-store-chats");
+      let storeChats = 0;
+      for (let r of storeRadios) { if (r.checked) storeChats = parseInt(r.value); }
+
+      const payload = {
+        name: document.getElementById("form-name").value.trim(),
+        slug: document.getElementById("form-slug").value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+        website_url: document.getElementById("form-website").value.trim(),
+        logo_url: document.getElementById("form-logo") ? document.getElementById("form-logo").value.trim() : "",
+        assistant_name: document.getElementById("form-asst-name").value.trim() || "Travel Concierge AI",
+        primary_color: document.getElementById("form-color-primary").value,
+        secondary_color: document.getElementById("form-color-secondary").value,
+        supported_languages: document.getElementById("form-langs").value.trim() || "English, Hindi",
+        welcome_message: document.getElementById("form-welcome").value.trim(),
+        knowledge_base: document.getElementById("form-kb").value.trim(),
+        contact_phone: document.getElementById("form-phone").value.trim(),
+        webhook_url: document.getElementById("form-webhook").value.trim(),
+        default_detail_level: document.getElementById("form-detail-level")?.value || "standard",
+        tone_of_voice: document.getElementById("form-tone")?.value.trim() || "Professional, warm, and expert travel consultant",
+        store_chat_history: storeChats
+      };
+
+      try {
+        const res = await fetch("/api/tenants", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          alert("Error: " + (err.detail || "Failed to create agency"));
+          return;
+        }
+
+        closeCreateTenantModal();
+        await loadData();
+      } catch (err) {
+        alert("Network error creating agency.");
+      }
+    }
+
+    // ===============================================================
+    // CLIENT SETTINGS & GUI CONTROLS MODAL LOGIC
+    // ===============================================================
+    function openTenantSettingsModal(tenantId) {
+      const t = tenants.find(x => x.id === tenantId);
+      if (!t) return;
+
+      document.getElementById("setting-tenant-id").value = t.id;
+      document.getElementById("setting-modal-agency-name").textContent = t.name;
+      document.getElementById("setting-modal-category-badge").textContent = (t.category || "General").replace('_', ' ').toUpperCase();
+
+      document.getElementById("setting-name").value = t.name || "";
+      document.getElementById("setting-asst-name").value = t.assistant_name || "";
+      document.getElementById("setting-website").value = t.website_url || "";
+      document.getElementById("setting-logo").value = t.logo_url || "";
+      document.getElementById("setting-color-primary").value = t.primary_color || "#047857";
+      document.getElementById("setting-color-secondary").value = t.secondary_color || "#064e3b";
+      document.getElementById("setting-color-accent").value = t.accent_color || "#f59e0b";
+
+      document.getElementById("setting-tone").value = t.tone_of_voice || "Professional, warm, and expert consultant";
+      document.getElementById("setting-detail-level").value = t.default_detail_level || "standard";
+      document.getElementById("setting-langs").value = t.supported_languages || "English, Hindi";
+      document.getElementById("setting-welcome").value = t.welcome_message || "";
+      document.getElementById("setting-kb").value = t.knowledge_base || "";
+
+      document.getElementById("setting-phone").value = t.contact_phone || "";
+      document.getElementById("setting-email").value = t.contact_email || "";
+      document.getElementById("setting-webhook").value = t.webhook_url || "";
+
+      // Database storage preference
+      const isStoreOn = t.store_chat_history == 1;
+      document.getElementById("setting-store-chats-1").checked = isStoreOn;
+      document.getElementById("setting-store-chats-0").checked = !isStoreOn;
+
+      // Update logo preview and demo preview link
+      updateSettingLogoPreview(t.logo_url, t.name);
+      document.getElementById("setting-live-preview-link").href = `/demo/${t.slug}`;
+
+      document.getElementById("tenant-settings-modal").classList.remove("hidden");
+    }
+
+    function closeTenantSettingsModal() {
+      document.getElementById("tenant-settings-modal").classList.add("hidden");
+    }
+
+    function updateSettingLogoPreview(url, fallbackName) {
+      const preview = document.getElementById("setting-logo-preview");
+      if (url && url.trim().length > 4) {
+        preview.innerHTML = `<img src="${url.trim()}" alt="" class="w-full h-full object-contain p-0.5 bg-white" onerror="this.parentElement.innerHTML='<span class=\\'text-xs font-semibold text-zinc-200\\'>AI</span>';" />`;
+      } else {
+        const initials = ((fallbackName || document.getElementById("setting-name")?.value || 'AI').slice(0, 2)).toUpperCase();
+        preview.innerHTML = `<span class="text-xs font-semibold text-zinc-200">${initials}</span>`;
+      }
+    }
+
+    function setSettingTonePreset(val) {
+      document.getElementById("setting-tone").value = val;
+    }
+
+    async function handleTenantSettingsSubmit(e) {
+      e.preventDefault();
+      const tenantId = document.getElementById("setting-tenant-id").value;
+      if (!tenantId) return;
+
+      const saveBtn = document.getElementById("save-setting-btn");
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = `<span>Saving...</span>`;
+
+      const storeRadios = document.getElementsByName("setting-store-chats");
+      let storeChats = 0;
+      for (let r of storeRadios) {
+        if (r.checked) storeChats = parseInt(r.value);
+      }
+
+      const updates = {
+        name: document.getElementById("setting-name").value.trim(),
+        assistant_name: document.getElementById("setting-asst-name").value.trim(),
+        website_url: document.getElementById("setting-website").value.trim(),
+        logo_url: document.getElementById("setting-logo").value.trim(),
+        primary_color: document.getElementById("setting-color-primary").value,
+        secondary_color: document.getElementById("setting-color-secondary").value,
+        accent_color: document.getElementById("setting-color-accent").value,
+        tone_of_voice: document.getElementById("setting-tone").value.trim(),
+        default_detail_level: document.getElementById("setting-detail-level").value,
+        supported_languages: document.getElementById("setting-langs").value.trim(),
+        welcome_message: document.getElementById("setting-welcome").value.trim(),
+        knowledge_base: document.getElementById("setting-kb").value.trim(),
+        contact_phone: document.getElementById("setting-phone").value.trim(),
+        contact_email: document.getElementById("setting-email").value.trim(),
+        webhook_url: document.getElementById("setting-webhook").value.trim(),
+        store_chat_history: storeChats
+      };
+
+      try {
+        const res = await fetch(`/api/tenants/${tenantId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updates)
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          alert("Error saving settings: " + (err.detail || "Request failed"));
+          return;
+        }
+
+        closeTenantSettingsModal();
+        await loadData();
+        alert("Configuration successfully saved! Changes are now live on the widget.");
+      } catch (err) {
+        alert("Network error updating tenant settings.");
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = `<span>Save Configuration</span>`;
+      }
+    }
+
+    function exportLeadsCsv() {
+      if (leads.length === 0) return;
+      let csv = "Timestamp,Agency,Customer Name,Phone,Destination,Travel Type,Pax,Budget,Seniors,Lead Score,Summary Notes\n";
+      leads.forEach(l => {
+        csv += `"${l.created_at || l.timestamp}","${l.tenant_name || ''}","${l.customer_name || ''}","${l.phone_number || ''}","${l.destination || ''}","${l.travel_type || ''}","${l.pax_count || ''}","${l.budget || ''}","${l.includes_seniors || ''}","${l.lead_score || ''}","${(l.summary_notes || '').replace(/"/g, '""')}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `Devlancer_Leads_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+    }
+
+    loadData();
+  </script>
+</body>
+</html>

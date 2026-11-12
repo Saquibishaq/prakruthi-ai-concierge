@@ -1,0 +1,32 @@
+# Environment variables & secrets
+.env
+.env.local
+.env.*.local
+
+# Python
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Databases & local state
+*.db
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Vercel & Deployments
+.vercel/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

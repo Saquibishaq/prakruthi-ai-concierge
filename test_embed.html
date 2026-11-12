@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Website Simulation – Devlancer Embed</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #fafafa;
+      color: #09090b;
+      -webkit-font-smoothing: antialiased;
+    }
+    header {
+      background: #09090b;
+      color: white;
+      padding: 18px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .hero {
+      max-width: 820px;
+      margin: 80px auto 40px auto;
+      padding: 0 20px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 38px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: #09090b;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+    p.subtitle {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #52525b;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    .tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: #f4f4f5;
+      border: 1px solid #e4e4e7;
+      color: #3f3f46;
+      font-size: 11px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      font-mono;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      max-width: 860px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      border: 1px solid #e4e4e7;
+      transition: border-color 0.15s;
+    }
+    .card:hover {
+      border-color: #a1a1aa;
+    }
+    .card h3 {
+      margin-top: 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: #09090b;
+      letter-spacing: -0.01em;
+    }
+    .card p {
+      font-size: 13px;
+      line-height: 1.55;
+      color: #71717a;
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div style="font-size: 15px; font-weight: 600; letter-spacing: -0.01em;">Many2Go Holidays</div>
+    <div style="font-size: 12px; color: #a1a1aa; font-family: monospace;">Host Website Simulation</div>
+  </header>
+
+  <div class="hero">
+    <div class="tag">Universal Embed Script Active</div>
+    <h1>Curated Worldwide Departures & Luxury Holidays</h1>
+    <p class="subtitle">
+      Notice the minimalist AI Concierge in the lower-right corner. It is rendered inside an isolated 
+      Shadow DOM, dynamically styled to match the agency without any CSS conflicts.
+    </p>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <h3>Wonders of Europe Group Tour</h3>
+      <p>9 Nights / 10 Days across Switzerland, France & Italy. All-inclusive flights, curated hotels & bilingual tour manager.</p>
+    </div>
+    <div class="card">
+      <h3>Vietnam & Cambodia Explorer</h3>
+      <p>Halong Bay luxury overnight cruise, Angkor Wat sunrise tour, and Golden Bridge in Da Nang.</p>
+    </div>
+    <div class="card">
+      <h3>Baku & Azerbaijan</h3>
+      <p>Flame Towers, Gobustan mud volcanoes, Ateshgah Fire Temple, and Shahdag mountain resort.</p>
+    </div>
+  </div>
+
+  <!-- THE UNIVERSAL DEVLANCER WIDGET SNIPPET -->
+  <script src="http://127.0.0.1:8000/widget.js" data-assistant-id="asst_many2go_holidays" defer></script>
+
+</body>
+</html>

@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="page-title">AI Travel Concierge</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #09090b; }
+    .prose p { margin-bottom: 0.5rem; }
+    .prose ul { list-style-type: disc; padding-left: 1.2rem; margin-bottom: 0.5rem; }
+    .prose strong { color: #09090b; font-weight: 600; }
+    .prose table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.75rem 0;
+      font-size: 0.75rem;
+      border: 1px solid #e4e4e7;
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+    .prose th {
+      background: #f4f4f5;
+      color: #18181b;
+      padding: 0.5rem 0.65rem;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 1px solid #e4e4e7;
+    }
+    .prose td {
+      padding: 0.45rem 0.65rem;
+      border-bottom: 1px solid #f4f4f5;
+      color: #3f3f46;
+    }
+    .prose tr:nth-child(even) td { background-color: #fafafa; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 9999px; }
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-col antialiased selection:bg-zinc-800 selection:text-white">
+
+  <!-- Top Branded Header -->
+  <header class="h-14 px-6 flex items-center justify-between text-white border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur shrink-0">
+    <div class="flex items-center gap-3">
+      <div id="agency-avatar" class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-semibold text-zinc-100 overflow-hidden">
+        AI
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 id="agency-name" class="font-medium text-xs text-zinc-100 leading-tight">Travel Concierge</h1>
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        </div>
+        <p id="agency-sub" class="text-[11px] text-zinc-400 mt-0.5">
+          <span>Official AI Concierge Desk</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Right Controls -->
+    <div class="flex items-center gap-2">
+      <a id="phone-link" href="#" class="h-7 px-3 rounded-lg text-[11px] font-medium text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 transition flex items-center gap-1.5">
+        <svg class="w-3 h-3 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+        <span id="agency-phone">+91 9845370515</span>
+      </a>
+      <a id="wa-link" href="#" target="_blank" class="h-7 px-3 rounded-lg text-[11px] font-medium text-zinc-950 bg-zinc-100 hover:bg-white transition flex items-center gap-1.5 shadow-xs">
+        <span>WhatsApp</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Two-Column Standalone Workspace -->
+  <main class="flex-1 flex overflow-hidden max-w-5xl w-full mx-auto p-4 sm:p-6 gap-5">
+    
+    <!-- Left: Conversational Stream -->
+    <div class="flex-1 bg-white rounded-xl shadow-2xl border border-zinc-200/90 flex flex-col overflow-hidden">
+      
+      <!-- Sub-banner with Detail Mode Control & Reset -->
+      <div class="bg-zinc-50 border-b border-zinc-100 px-4 py-2 text-[11px] text-zinc-500 flex items-center justify-between font-medium shrink-0">
+        <div class="flex items-center gap-2">
+          <span class="text-zinc-400">Detail:</span>
+          <div class="inline-flex bg-zinc-200/70 p-0.5 rounded-md gap-0.5">
+            <button type="button" onclick="setStandaloneDetail('quick')" id="mode-btn-quick" class="text-[10px] px-2 py-0.5 rounded font-medium text-zinc-600 hover:text-zinc-900 transition">Quick</button>
+            <button type="button" onclick="setStandaloneDetail('standard')" id="mode-btn-standard" class="text-[10px] px-2 py-0.5 rounded font-medium bg-white text-zinc-900 shadow-2xs transition">Standard</button>
+            <button type="button" onclick="setStandaloneDetail('detailed')" id="mode-btn-detailed" class="text-[10px] px-2 py-0.5 rounded font-medium text-zinc-600 hover:text-zinc-900 transition">Detailed</button>
+          </div>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <button onclick="resetStandaloneChat()" class="text-zinc-500 hover:text-zinc-800 text-[11px] font-medium transition">New Chat</button>
+          <span class="text-zinc-300">•</span>
+          <button onclick="downloadTranscript()" class="text-zinc-500 hover:text-zinc-800 text-[11px] font-medium flex items-center gap-1 transition">
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+            <span>Export</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages Feed -->
+      <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-3.5 bg-zinc-50/50">
+        <!-- Welcoming model message -->
+      </div>
+
+      <!-- Quick Reply Chips -->
+      <div id="quick-replies" class="px-4 py-2 bg-white border-t border-zinc-100 flex gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+        <!-- Dynamically rendered -->
+      </div>
+
+      <!-- Composer Input -->
+      <form onsubmit="handleChatSubmit(event)" class="p-3 bg-white border-t border-zinc-100 flex items-center gap-2 shrink-0">
+        <button type="button" id="mic-btn" onclick="toggleVoice()" class="w-8 h-8 rounded-lg bg-zinc-50 hover:bg-zinc-100 text-zinc-600 flex items-center justify-center transition border border-zinc-200 shrink-0">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"></path><path d="M19 10v2a7 7 0 01-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+        </button>
+        <input
+          id="chat-input"
+          type="text"
+          placeholder="Ask about destinations, pricing, or itineraries..."
+          class="flex-1 text-xs bg-zinc-50 border border-zinc-200 rounded-lg px-3.5 py-2 focus:outline-none focus:border-zinc-700 focus:bg-white text-zinc-800 transition"
+          autocomplete="off"
+        />
+        <button type="submit" class="bg-zinc-950 hover:bg-zinc-800 text-white rounded-lg px-4 py-2 text-xs font-medium transition shadow-xs shrink-0 flex items-center gap-1">
+          <span>Send</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Right: Trip Cost & Pax Calculator Sidebar -->
+    <div class="hidden lg:flex w-72 flex-col gap-4 shrink-0">
+      <div class="bg-zinc-950 rounded-xl p-4 border border-zinc-800/80 space-y-3">
+        <h3 class="font-medium text-xs text-zinc-200 flex items-center gap-1.5 border-b border-zinc-800/80 pb-2">
+          <span>Trip Budget Estimator</span>
+        </h3>
+
+        <div>
+          <label class="block text-[10.5px] text-zinc-400 font-medium mb-1">Package</label>
+          <select id="calc-dest" onchange="updateCalc()" class="w-full text-xs bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-zinc-200 font-medium focus:outline-none"></select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[10px] text-zinc-400 font-medium">Adults</label>
+            <input type="number" id="calc-adults" min="1" max="50" value="2" oninput="updateCalc()" class="w-full text-xs bg-zinc-900 border border-zinc-800 rounded-lg p-1.5 text-center font-medium text-zinc-100" />
+          </div>
+          <div>
+            <label class="block text-[10px] text-zinc-400 font-medium">Seniors (60+)</label>
+            <input type="number" id="calc-seniors" min="0" max="50" value="0" oninput="updateCalc()" class="w-full text-xs bg-zinc-900 border border-zinc-800 rounded-lg p-1.5 text-center font-medium text-zinc-100" />
+          </div>
+        </div>
+
+        <div class="bg-zinc-900/80 border border-zinc-800/80 rounded-lg p-3 text-center">
+          <span class="block text-[10px] text-zinc-400 font-medium uppercase tracking-wider">Estimated Budget</span>
+          <span id="calc-total" class="text-lg font-semibold text-zinc-100 block my-0.5">₹0</span>
+          <span class="text-[10px] text-zinc-500 block">Hotels, Flights & Meals</span>
+        </div>
+
+        <button onclick="submitCalculatorInquiry()" class="w-full py-2 bg-zinc-100 hover:bg-white text-zinc-950 font-medium text-xs rounded-lg transition shadow-xs flex items-center justify-center gap-1">
+          <span>Request Quote</span>
+          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const slug = window.location.pathname.split("/").pop() || "many2go-holidays";
+    const SESSION_ID = "stand_" + Math.random().toString(36).substring(2, 9);
+    let tenant = null;
+    let packages = [];
+
+    const messagesEl = document.getElementById("chat-messages");
+    const inputEl = document.getElementById("chat-input");
+    const quickRepliesEl = document.getElementById("quick-replies");
+
+    marked.setOptions({ gfm: true, breaks: true });
+
+    async function init() {
+      try {
+        const res = await fetch(`/api/tenants/${slug}`);
+        const data = await res.json();
+        tenant = data.tenant;
+        packages = data.packages || [];
+
+        // Apply Branding
+        document.getElementById("page-title").textContent = `${tenant.name} • Official AI Concierge`;
+        document.getElementById("agency-name").textContent = tenant.name;
+        document.getElementById("agency-phone").textContent = tenant.contact_phone || "Support Online";
+        document.getElementById("phone-link").href = `tel:${tenant.contact_phone || ''}`;
+        document.getElementById("wa-link").href = `https://wa.me/${(tenant.contact_phone || '').replace(/[^0-9]/g, '')}`;
+        
+        const logoUrl = (tenant.logo_url || '').trim() || (tenant.website_url ? `https://www.google.com/s2/favicons?domain=${tenant.website_url.replace(/^https?:\/\//i, '').split('/')[0]}&sz=128` : '');
+        const initials = (tenant.name || 'AI').slice(0, 2).toUpperCase();
+        const avatarEl = document.getElementById("agency-avatar");
+        if (logoUrl) {
+          avatarEl.innerHTML = `
+            <img src="${logoUrl}" alt="${tenant.name}" class="w-full h-full object-contain p-1 rounded-lg bg-white" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <span style="display:none;" class="w-full h-full flex items-center justify-center text-xs font-semibold text-zinc-100">${initials}</span>
+          `;
+        } else {
+          avatarEl.textContent = initials;
+        }
+
+        // Populate Packages dropdown in calculator
+        const calcSelect = document.getElementById("calc-dest");
+        if (packages.length > 0) {
+          calcSelect.innerHTML = packages.map(p => `
+            <option value="${p.starting_price_inr}">${p.name} (₹${Number(p.starting_price_inr).toLocaleString('en-IN')})</option>
+          `).join("");
+        } else {
+          calcSelect.innerHTML = `<option value="100000">Standard Package (₹1,00,000)</option>`;
+        }
+        updateCalc();
+
+        // Initial Greeting
+        const cat = (tenant.category || 'general').toLowerCase();
+        const fallbackGreeting = cat === 'travel'
+          ? `Hello! Welcome to **${tenant.name}**. How can we help plan your journey?`
+          : `Hello! Welcome to **${tenant.name}**. How can I help you today?`;
+        appendMessage("model", tenant.welcome_message || fallbackGreeting);
+
+        // Quick Replies
+        let prompts = [];
+        if (tenant.starter_prompts) {
+          try {
+            prompts = typeof tenant.starter_prompts === 'string' ? JSON.parse(tenant.starter_prompts) : tenant.starter_prompts;
+          } catch (e) {
+            prompts = [];
+          }
+        }
+        if (!prompts || prompts.length === 0) {
+          if (packages.length > 0) {
+            prompts = packages.slice(0, 4).map(p => p.name);
+          } else if (cat.includes('movie') || cat.includes('film') || cat.includes('cinema')) {
+            prompts = ["Top 10 Movies of All Time", "Best Action Movies", "The Shawshank Redemption", "Highest Rated Films"];
+          } else if (cat.includes('cricket')) {
+            prompts = ["Live Cricket Scores", "Upcoming Fixtures", "Recent Match Results"];
+          } else if (cat === 'travel') {
+            prompts = ["Holiday Packages", "Fixed Departures", "Pricing Table"];
+          } else {
+            prompts = ["Overview", "Frequently Asked Questions", "Contact Support"];
+          }
+        }
+        quickRepliesEl.innerHTML = prompts.map(qr => `
+          <button onclick="sendQuickReply('${qr.replace(/'/g, "\\'")}')" class="shrink-0 text-[11px] bg-zinc-50 hover:bg-zinc-100 text-zinc-700 border border-zinc-200 px-3 py-1 rounded-full font-medium transition shadow-2xs">
+            ${qr}
+          </button>
+        `).join("");
+
+      } catch (err) {
+        console.error("Error loading standalone tenant:", err);
+      }
+    }
+
+    function updateCalc() {
+      const select = document.getElementById("calc-dest");
+      const basePrice = parseInt(select.value || "100000", 10);
+      const adults = parseInt(document.getElementById("calc-adults").value || "1", 10);
+      const seniors = parseInt(document.getElementById("calc-seniors").value || "0", 10);
+      const seniorDiscount = 5000;
+
+      const total = (adults * basePrice) + (seniors * Math.max(basePrice - seniorDiscount, 0));
+      document.getElementById("calc-total").textContent = `₹${total.toLocaleString('en-IN')}`;
+    }
+
+    function submitCalculatorInquiry() {
+      const select = document.getElementById("calc-dest");
+      const pkgName = select.options[select.selectedIndex].text.split("(")[0].trim();
+      const adults = document.getElementById("calc-adults").value;
+      const seniors = document.getElementById("calc-seniors").value;
+      const total = document.getElementById("calc-total").textContent;
+
+      sendQuickReply(`I calculated an estimate for ${pkgName}: ${adults} Adults and ${seniors} Seniors. Estimated budget: ${total}. Please provide full itinerary and inclusions.`);
+    let currentDetailMode = "standard";
+
+    function setStandaloneDetail(mode) {
+      currentDetailMode = mode;
+      ["quick", "standard", "detailed"].forEach(m => {
+        const btn = document.getElementById(`mode-btn-${m}`);
+        if (btn) {
+          if (m === mode) {
+            btn.className = "text-[10px] px-2 py-0.5 rounded font-medium bg-white text-zinc-900 shadow-2xs transition";
+          } else {
+            btn.className = "text-[10px] px-2 py-0.5 rounded font-medium text-zinc-600 hover:text-zinc-900 transition";
+          }
+        }
+      });
+    }
+
+    async function resetStandaloneChat() {
+      if (confirm("Reset conversation and start fresh?")) {
+        try {
+          await fetch("/api/chat/reset", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ session_id: SESSION_ID, tenant_id: tenant ? tenant.id : "" })
+          });
+        } catch (e) {}
+        messagesEl.innerHTML = "";
+        appendMessage("model", tenant.welcome_message || `Hello! How can we assist your trip planning today?`);
+      }
+    }
+
+    function sendQuickReply(text) {
+      inputEl.value = text;
+      handleChatSubmit(new Event("submit"));
+    }
+
+    function appendMessage(role, text, components = null, followUp = null, actions = null) {
+      const wrap = document.createElement("div");
+      if (role === "user") {
+        wrap.className = "flex justify-end";
+        wrap.innerHTML = `<div class="bg-zinc-950 text-white rounded-xl rounded-tr-xs px-3.5 py-2 text-xs max-w-[85%] leading-relaxed">${text}</div>`;
+      } else {
+        wrap.className = "flex items-start gap-2.5";
+        let extraHtml = "";
+
+        if (components) {
+          // Summary
+          if (components.summary) {
+            extraHtml += `<div class="bg-zinc-100 border-l-2 border-zinc-900 p-2 text-[11px] font-medium text-zinc-800 rounded-r mb-2.5">${components.summary}</div>`;
+          }
+
+          // Cards
+          if (components.cards && components.cards.length > 0) {
+            extraHtml += `
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 my-2.5">
+                ${components.cards.map(c => `
+                  <div class="bg-zinc-50 border border-zinc-200 rounded-lg p-2.5 flex flex-col justify-between">
+                    <div>
+                      ${c.badge ? `<span class="text-[9px] font-semibold bg-zinc-200 text-zinc-700 px-1.5 py-0.5 rounded uppercase tracking-wider">${c.badge}</span>` : ''}
+                      <div class="font-semibold text-xs text-zinc-900 mt-1">${c.title}</div>
+                      ${c.duration ? `<div class="text-[10px] text-zinc-500">${c.duration}</div>` : ''}
+                      ${c.price ? `<div class="text-xs font-bold text-zinc-950 mt-1">${c.price}</div>` : ''}
+                      ${c.highlights && c.highlights.length > 0 ? `
+                        <ul class="text-[10.5px] text-zinc-600 mt-1.5 space-y-0.5 list-disc pl-3">
+                          ${c.highlights.map(h => `<li>${h}</li>`).join('')}
+                        </ul>` : ''}
+                    </div>
+                    <button onclick="sendQuickReply('Tell me more about ${c.title.replace(/'/g, "\\'")}')" class="mt-2 text-[10.5px] bg-zinc-900 hover:bg-zinc-800 text-white py-1 px-2 rounded font-medium transition text-center">
+                      Select Package
+                    </button>
+                  </div>
+                `).join('')}
+              </div>
+            `;
+          }
+
+          // Comparison Table
+          if (components.comparison_table) {
+            const ct = components.comparison_table;
+            extraHtml += `
+              <div class="overflow-x-auto my-2.5 border border-zinc-200 rounded-lg">
+                <table class="w-full text-left text-[11px]">
+                  <thead class="bg-zinc-100 text-zinc-700 font-semibold border-b border-zinc-200">
+                    <tr>${ct.headers.map(h => `<th class="p-2">${h}</th>`).join('')}</tr>
+                  </thead>
+                  <tbody class="divide-y divide-zinc-200 text-zinc-600">
+                    ${ct.rows.map(r => `<tr>${r.map(c => `<td class="p-2">${c}</td>`).join('')}</tr>`).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `;
+          }
+
+          // Itinerary
+          if (components.itinerary && components.itinerary.length > 0) {
+            extraHtml += `
+              <div class="border-l-2 border-zinc-300 ml-2 pl-3 space-y-2.5 my-2.5">
+                ${components.itinerary.map(d => `
+                  <div>
+                    <div class="font-semibold text-xs text-zinc-950">Day ${d.day_number}: ${d.title}</div>
+                    ${d.morning ? `<div class="text-[11px] text-zinc-600"><strong>Morning:</strong> ${d.morning}</div>` : ''}
+                    ${d.afternoon ? `<div class="text-[11px] text-zinc-600"><strong>Afternoon:</strong> ${d.afternoon}</div>` : ''}
+                    ${d.evening ? `<div class="text-[11px] text-zinc-600"><strong>Evening:</strong> ${d.evening}</div>` : ''}
+                    ${d.meal_stay ? `<span class="inline-block text-[9.5px] bg-zinc-100 text-zinc-600 px-1.5 py-0.5 rounded mt-1">${d.meal_stay}</span>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            `;
+          }
+
+          // Accordions
+          if (components.accordions && components.accordions.length > 0) {
+            extraHtml += `
+              <div class="space-y-1.5 my-2.5">
+                ${components.accordions.map(a => `
+                  <details class="border border-zinc-200 rounded-md bg-zinc-50 overflow-hidden text-xs">
+                    <summary class="p-2 font-medium text-zinc-900 cursor-pointer select-none bg-zinc-100/70">${a.title}</summary>
+                    <div class="p-2.5 text-zinc-600 bg-white leading-relaxed text-[11px] border-t border-zinc-200">${marked.parse(a.content || '')}</div>
+                  </details>
+                `).join('')}
+              </div>
+            `;
+          }
+
+          // Follow-up chips
+          if (components.follow_up) {
+            const f = components.follow_up;
+            extraHtml += `
+              <div class="bg-purple-50 border border-purple-200 rounded-lg p-2.5 my-2">
+                <div class="text-xs font-semibold text-purple-900 mb-1.5">${f.question}</div>
+                <div class="flex flex-wrap gap-1.5">
+                  ${(f.chips || []).map(chip => `
+                    <button onclick="sendQuickReply('${chip.replace(/'/g, "\\'")}')" class="text-[10.5px] bg-white border border-purple-300 text-purple-800 hover:bg-purple-100 px-2.5 py-0.5 rounded-full font-medium transition">
+                      ${chip}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+            `;
+          }
+
+          // Suggested Actions
+          if (components.suggested_actions && components.suggested_actions.length > 0) {
+            extraHtml += `
+              <div class="flex flex-wrap gap-1.5 mt-2.5 pt-2 border-t border-zinc-100">
+                ${components.suggested_actions.map(act => `
+                  <button onclick="handleActionButtonClick('${act.action_type}', ${JSON.stringify(act.payload || {}).replace(/"/g, '&quot;')})" class="text-[10.5px] bg-zinc-900 hover:bg-zinc-800 text-white px-2.5 py-1 rounded-md font-medium transition flex items-center gap-1 shadow-2xs">
+                    <span>${act.label}</span>
+                    <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  </button>
+                `).join('')}
+              </div>
+            `;
+          }
+        }
+
+        const botLogoUrl = (tenant && tenant.logo_url) ? tenant.logo_url : '';
+        const botInitials = (tenant && tenant.name ? tenant.name : 'AI').slice(0, 2).toUpperCase();
+        const botAvatarHtml = botLogoUrl ? `
+          <div class="w-6 h-6 rounded-md bg-white border border-zinc-200 flex items-center justify-center shrink-0 mt-0.5 overflow-hidden p-0.5 shadow-2xs">
+            <img src="${botLogoUrl}" alt="" class="w-full h-full object-contain" onerror="this.parentElement.className='w-6 h-6 rounded-md bg-zinc-900 text-zinc-300 border border-zinc-800 flex items-center justify-center text-[10px] font-semibold shrink-0 mt-0.5'; this.parentElement.innerHTML='${botInitials}';" />
+          </div>
+        ` : `
+          <div class="w-6 h-6 rounded-md bg-zinc-900 text-zinc-300 border border-zinc-800 flex items-center justify-center text-[10px] font-semibold shrink-0 mt-0.5">${botInitials}</div>
+        `;
+
+        wrap.innerHTML = `
+          ${botAvatarHtml}
+          <div class="prose bg-white border border-zinc-200 rounded-xl rounded-tl-xs p-3.5 text-xs text-zinc-800 shadow-2xs max-w-[90%] leading-relaxed">
+            ${marked.parse(text)}
+            ${extraHtml}
+          </div>
+        `;
+      }
+      messagesEl.appendChild(wrap);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    async function handleActionButtonClick(actionType, payload) {
+      if (actionType === "submit_enquiry_confirm") {
+        try {
+          const res = await fetch("/api/action/execute", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              session_id: SESSION_ID,
+              assistant_id: tenant ? tenant.assistant_id : null,
+              action_type: "submit_enquiry_confirm",
+              payload: payload
+            })
+          });
+          const d = await res.json();
+          appendMessage("model", d.message || "Enquiry confirmed with our tour manager desk!");
+        } catch (e) {
+          appendMessage("model", "Thank you, your inquiry has been registered.");
+        }
+        return;
+      }
+      const msg = payload.message || "Tell me more";
+      sendQuickReply(msg);
+    }
+
+    async function handleChatSubmit(e) {
+      if (e) e.preventDefault();
+      const text = inputEl.value.trim();
+      if (!text) return;
+
+      inputEl.value = "";
+      appendMessage("user", text);
+
+      // Typing indicator
+      const typingEl = document.createElement("div");
+      typingEl.id = "typing-box";
+      typingEl.className = "text-xs text-zinc-400 pl-8 italic";
+      const cat = (tenant && tenant.category ? tenant.category : 'general').toLowerCase();
+      const qLower = text.toLowerCase();
+      let actionText = "thinking...";
+      if (cat.includes('movie') || cat.includes('film') || cat.includes('cinema') || cat.includes('entertain') || qLower.includes('movie') || qLower.includes('film') || qLower.includes('actor') || qLower.includes('rating')) {
+        actionText = "looking up movie ratings & details...";
+      } else if (cat.includes('cricket') || qLower.includes('cricket') || qLower.includes('match') || qLower.includes('score')) {
+        actionText = "fetching latest match updates...";
+      } else if (cat.includes('sport') || qLower.includes('game') || qLower.includes('fixture')) {
+        actionText = "checking sports scores...";
+      } else if (cat.includes('shop') || cat.includes('ecom') || cat.includes('store') || qLower.includes('shoe') || qLower.includes('product')) {
+        actionText = "finding best options...";
+      } else if (cat === 'travel' || qLower.includes('itinerary') || qLower.includes('tour') || qLower.includes('trip')) {
+        actionText = "checking itineraries...";
+      } else {
+        actionText = "finding the best answers...";
+      }
+      typingEl.textContent = `${tenant ? (tenant.assistant_name || tenant.name) : 'Assistant'} is ${actionText}`;
+      messagesEl.appendChild(typingEl);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tenant_slug: slug,
+            session_id: SESSION_ID,
+            message: text,
+            detail_mode: currentDetailMode
+          })
+        });
+
+        const data = await res.json();
+        const t = document.getElementById("typing-box");
+        if (t) t.remove();
+
+        if (!res.ok) {
+          appendMessage("model", `Notice: ${data.detail || 'Service unavailable'}`);
+          return;
+        }
+
+        appendMessage("model", data.reply, data.components);
+
+        if (data.quick_replies && data.quick_replies.length > 0) {
+          quickRepliesEl.innerHTML = data.quick_replies.map(qr => `
+            <button onclick="sendQuickReply('${qr.replace(/'/g, "\\'")}')" class="shrink-0 text-[11px] bg-zinc-50 hover:bg-zinc-100 text-zinc-700 border border-zinc-200 px-3 py-1 rounded-full font-medium transition shadow-2xs">
+              ${qr}
+            </button>
+          `).join("");
+        }
+
+      } catch (err) {
+        const t = document.getElementById("typing-box");
+        if (t) t.remove();
+        appendMessage("model", "Connection error. Please verify the backend is running.");
+      }
+    }
+
+    function toggleVoice() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("Voice recognition not supported in this browser.");
+        return;
+      }
+      const rec = new SpeechRecognition();
+      rec.lang = "en-IN";
+      rec.onstart = () => { document.getElementById("mic-btn").style.background = "#fee2e2"; };
+      rec.onresult = (e) => { inputEl.value = e.results[0][0].transcript; };
+      rec.onend = () => { document.getElementById("mic-btn").style.background = ""; };
+      rec.start();
+    }
+
+    function downloadTranscript() {
+      const text = Array.from(messagesEl.querySelectorAll(".prose, .bg-zinc-950")).map(el => el.innerText).join("\n\n");
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8;" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${slug}_chat_transcript.txt`;
+      a.click();
+    }
+
+    init();
+  </script>
+</body>
+</html>
